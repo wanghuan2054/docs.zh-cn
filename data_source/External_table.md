@@ -739,7 +739,7 @@ Hive Table 的 Partition 统计信息以及 Partition 下面的文件信息可�
 * StarRocks 开启自动增量元数据同步
 
     用户需要在 $FE_HOME/conf/fe.conf 中添加如下配置并重启 FE。
-    `enable_hms_events_incremental_sync=true` 
+     `enable_hms_events_incremental_sync=true`
     自动增量元数据同步相关配置如下，如无特殊需求，无需修改。
 
    | 参数值                             | 说明                                      | 默认值 |
