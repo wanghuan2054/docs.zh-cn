@@ -22,6 +22,10 @@ Broker Load 支持如下数据文件格式：
 
 - ORC
 
+> **说明**
+>
+> 对于 CSV 格式的数据，StarRocks 支持设置长度最大不超过 50 个字节的 UTF-8 编码字符串作为列分隔符，包括常见的逗号 (,)、Tab 和 Pipe (|)。
+
 ## 支持的外部存储系统
 
 Broker Load 支持从如下外部存储系统导入数据：
@@ -118,12 +122,12 @@ LOAD LABEL test_db.label1
     DATA INFILE("hdfs://<hdfs_host>:<hdfs_port>/user/starrocks/file1.csv")
     INTO TABLE table1
     COLUMNS TERMINATED BY ","
-    (id, city)
+    (id, name, score)
 
     DATA INFILE("hdfs://<hdfs_host>:<hdfs_port>/user/starrocks/file2.csv")
     INTO TABLE table2
     COLUMNS TERMINATED BY ","
-    (id, name, score)
+   (id, city)
 )
 WITH BROKER "mybroker"
 (
@@ -145,11 +149,11 @@ LOAD LABEL test_db.label2
 (
     DATA INFILE("s3a://bucket_s3/input/file1.csv")
     INTO TABLE table1
-    (id, city)
+    (id, name, score)
     
     DATA INFILE("s3a://bucket_s3/input/file2.csv")
     INTO TABLE table2
-    (id, name, score)
+    (id, city)
 )
 WITH BROKER "mybroker"
 (
@@ -159,7 +163,9 @@ WITH BROKER "mybroker"
 )
 ```
 
-> 说明：从 Amazon S3 导入数据使用的是 S3A 协议，因此文件路径的前缀必须为 `s3a://`。
+> **说明**
+>
+> 从 Amazon S3 导入数据使用的是 S3A 协议，因此文件路径的前缀必须为 `s3a://`。
 
 #### 从 Google GCS 导入
 
@@ -170,11 +176,11 @@ LOAD LABEL test_db.label3
 (
     DATA INFILE("s3a://bucket_gcs/input/file1.csv")
     INTO TABLE table1
-    (id, city)
+    (id, name, score)
     
     DATA INFILE("s3a://bucket_gcs/input/file2.csv")
     INTO TABLE table2
-    (id, name, score)
+    (id, city)
 )
 WITH BROKER "mybroker"
 (
@@ -184,7 +190,9 @@ WITH BROKER "mybroker"
 )
 ```
 
-> 说明：从 Amazon S3 导入数据使用的是 S3A 协议，因此文件路径的前缀必须为 `s3a://`。
+> **说明**
+>
+> 从 Amazon S3 导入数据使用的是 S3A 协议，因此文件路径的前缀必须为 `s3a://`。
 
 #### 从 阿里云 OSS 导入
 
@@ -195,11 +203,11 @@ LOAD LABEL test_db.label4
 (
     DATA INFILE("oss://bucket_oss/input/file1.csv")
     INTO TABLE table1
-    (id, city)
+    (id, name, score)
     
     DATA INFILE("oss://bucket_oss/input/file2.csv")
     INTO TABLE table2
-    (id, name, score)
+    (id, city)
 )
 WITH BROKER "mybroker"
 (
@@ -218,11 +226,11 @@ LOAD LABEL test_db.label5
 (
     DATA INFILE("cosn://bucket_cos/input/file1.csv")
     INTO TABLE table1
-    (id, name)
+    (id, name, score)
     
     DATA INFILE("cosn://bucket_cos/input/file2.csv")
     INTO TABLE table2
-    (id, name, score)
+    (id, city)
 )
 WITH BROKER "mybroker"
 (

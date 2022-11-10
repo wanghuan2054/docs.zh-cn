@@ -21,7 +21,7 @@
 |系统环境|<ul><li>集群时钟需保持同步。 </li> <li> 用户需要有设置 <code>ulimit -n</code> 权限。 </li> </ul> | |
 
 > 说明
-> 依据不同的工作负载复杂性，StarRocks 每个 CPU 线程每秒可以处理 10M 至 100M 行数据。您可以据此估计集群中需要多少 CPU 线程能够满足您的要求。而 StarRocks 在存储数据时利用列存储和压缩，可以达到 4-10 倍的压缩比，您可以使用该数据来估计集群所需的存储量。
+> 依据不同的工作负载复杂性，StarRocks 每个 CPU 线程每秒可以处理 10M 至 100M 数据。您可以据此估计集群中需要多少 CPU 线程能够满足您的要求。而 StarRocks 在存储数据时利用列存储和压缩，可以达到 4-10 倍的压缩比，您可以使用该数据来估计集群所需的存储量。
 
 其他系统参数配置：
 
@@ -39,7 +39,7 @@ echo 1 | sudo tee /proc/sys/vm/overcommit_memory
 
 ## 部署 FE 节点
 
-本小节介绍如何配置部署 Frontend (FE) 节点。FE 是StarRocks的前端节点，负责管理元数据，管理客户端连接，进行查询规划，查询调度等工作。
+本小节介绍如何配置部署 Frontend (FE) 节点。FE 是 StarRocks 的前端节点，负责管理元数据，管理客户端连接，进行查询规划，查询调度等工作。
 
 ### 下载并解压安装包
 
@@ -192,11 +192,11 @@ StarRocks 的 FE 节点支持 HA 模型部署，以保证集群的高可用。�
 
 ## 部署 BE 节点
 
-本小节介绍如何配置部署 Backend (BE) 节点。BE 是StarRocks的后端节点，负责数据存储以及SQL执行等工作。以下例子仅部署一个 BE 节点。您可以通过重复以下步骤添加多个 BE 节点。
+本小节介绍如何配置部署 Backend (BE) 节点。BE 是 StarRocks 的后端节点，负责数据存储以及 SQL 执行等工作。以下例子仅部署一个 BE 节点。您可以通过重复以下步骤添加多个 BE 节点。
 
 ### 下载并解压安装包
 
-[下载](https://www.starrocks.com/zh-CN/download) StarRocks 并解压二进制安装包。
+[下载](https://www.starrocks.com/zh-CN/download/community) StarRocks 并解压二进制安装包。
 
 ```bash
 tar -xzvf StarRocks-x.x.x.tar.gz

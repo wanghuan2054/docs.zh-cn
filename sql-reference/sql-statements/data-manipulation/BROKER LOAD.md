@@ -72,7 +72,9 @@ INTO TABLE <table_name>
 
   用于撤销某一批已经成功导入的数据。如果想要撤销某一批已经成功导入的数据，可以通过指定 `NEGATIVE` 关键字来导入同一批数据。
 
-  > 说明：该参数仅适用于目标 StarRocks 表使用聚合模型、并且所有 Value 列的聚合函数均为 `sum` 的情况。
+  > **说明**
+  >
+  > 该参数仅适用于目标 StarRocks 表使用聚合模型、并且所有 Value 列的聚合函数均为 `sum` 的情况。
 
 - `PARTITION`
 
@@ -88,13 +90,17 @@ INTO TABLE <table_name>
 
   需要注意的是，Broker Load 通过 MySQL 协议提交导入请求，除了 StarRocks 会做转义处理以外，MySQL 协议也会做转义处理。因此，如果列分隔符是 Tab 等不可见字符，则需要在列分隔字符前面多加一个反斜线 (\\)。例如，如果列分隔符是 `\t`，这里必须输入 `\\t`；如果列分隔符是 `\n`，这里必须输入 `\\n`。Apache Hive™ 文件的列分隔符为 `\x01`，因此，如果待导入数据文件是 Hive 文件，这里必须传入 `\\x01`。
 
-  > 说明：StarRocks 支持设置长度最大不超过 50 个字节的 UTF-8 编码字符串作为列分隔符，包括常见的逗号 (,)、Tab 和 Pipe (|)。
+  > **说明**
+  >
+  > StarRocks 支持设置长度最大不超过 50 个字节的 UTF-8 编码字符串作为列分隔符，包括常见的逗号 (,)、Tab 和 Pipe (|)。
 
 - `column_list`
 
   用于指定待导入数据文件和 StarRocks 表之间的列对应关系。语法如下：`(<column_name>[, <column_name> ...])`。`column_list` 中声明的列与 StarRocks 表中的列按名称一一对应。
 
-  > 说明：如果待导入数据文件的列和 StarRocks 表中的列按顺序一一对应，则不需要指定 `column_list` 参数。
+  > **说明**
+  >
+  > 如果待导入数据文件的列和 StarRocks 表中的列按顺序一一对应，则不需要指定 `column_list` 参数。
 
   如果要跳过待导入数据文件中的某一列，只需要在 `column_list` 参数中将该列命名为 StarRocks 表中不存在的列名即可。具体请参见[导入过程中实现数据转换](/loading/Etl_in_loading.md)。
 
@@ -104,7 +110,9 @@ INTO TABLE <table_name>
 
   例如，待导入数据文件所在的路径为 `/path/col_name=col_value/file1`，其中 `col_name` 可以对应到 StarRocks 表中的列，因此导入时会将 `col_value` 落入 `col_name` 对应的列中。
 
-  > 说明：该参数只有在从 HDFS 导入数据时可用。
+  > **说明**
+  >
+  > 该参数只有在从 HDFS 导入数据时可用。
 
 - `SET`
 
@@ -149,9 +157,9 @@ INTO TABLE <table_name>
   - 如果使用 Kerberos 认证，需要指定如下配置：
 
     ```Plain
-    "hadoop.security.authentication" = "kerberos"
-    "kerberos_principal = "nn/zelda1@ZELDA.COM"
-    "kerberos_keytab = "/keytab/hive.keytab"
+    "hadoop.security.authentication" = "kerberos",
+    "kerberos_principal = "nn/zelda1@ZELDA.COM",
+    "kerberos_keytab = "/keytab/hive.keytab",
     "kerberos_keytab_content = "YWFhYWFh"
     ```
 
@@ -163,24 +171,35 @@ INTO TABLE <table_name>
     | kerberos_keytab         | 用于指定 Kerberos 的 Key Table（简称为“keytab”）文件的路径。该文件必须在 Broker 所在服务器上。 |
     | kerberos_keytab_content | 用于指定 Kerberos 中 keytab 文件的内容经过 Base64 编码之后的内容。该参数跟 `kerberos_keytab` 参数二选一配置。 |
 
+   注：使用 kerberos 认证时，需要修改 Broker 服务的 start_broker.sh 启动脚本，在文件 42 行附近修改如下信息让 Broker 服务读取 krb5.conf 文件信息。  
+   `/etc/krb5.conf` 文件路径根据实际情况进行修改，Broker 进程需要有权限读取该文件。  
+   部署多个 Broker 节点时，每个节点均需要修改如下信息，重启后生效。  
+
+    ```Plain
+    export JAVA_OPTS="-Dlog4j2.formatMsgNoLookups=true -Xmx1024m -Dfile.encoding=UTF-8 -Djava.security.krb5.conf=/etc/krb5.conf"
+    ```
+
 - HA 配置
 
-  可以为 HDFS 集群中的 NameNode 节点配置 HA 机制，从而确保发生 NameNode 节点切换时，StarRocks 能够自动识别新切换到的 NameNode 节点。HA 配置示例如下：
+  可以为 HDFS 集群中的 NameNode 节点配置 HA 机制，从而确保发生 NameNode 节点切换时，StarRocks 能够自动识别新切换到的 NameNode 节点。  
+  目前 Broker 节点有两种方案可以读取到 Hdfs 节点信息，第一种方式是将 `hdfs-site.xml` 文件放在每个 Broker 节点的 `{deploy}/conf` 目录下，Broker 进程重启时会将 `{deploy_dir}/conf/` 目录添加到 CLASSPATH 环境变量的方式读取文件信息。  
+  另一种是在 Broker load 任务创建时增加如下 HA 配置：
 
   ```Plain
-  "dfs.nameservices" = "my_ha"
-  "dfs.ha.namenodes.my_ha" = "my_nn"
-  "dfs.namenode.rpc-address.my_ha.my_nn" = "<hdfs_host>:<hdfs_port>"
+  "dfs.nameservices" = "ha_cluster",
+  "dfs.ha.namenodes.ha_cluster" = "ha_n1,ha_n2",
+  "dfs.namenode.rpc-address.ha_cluster.ha_n1" = "<hdfs_host>:<hdfs_port>",
+  "dfs.namenode.rpc-address.ha_cluster.ha_n2" = "<hdfs_host>:<hdfs_port>",
   "dfs.client.failover.proxy.provider" = "org.apache.hadoop.hdfs.server.namenode.ha.ConfiguredFailoverProxyProvider"
   ```
 
-  上述配置中的参数说明如下表所述。
+  上述配置中的参数说明如下表所述：
 
   | **参数名称**                         | **参数说明**                                                 |
-  | ------------------------------------ | ------------------------------------------------------------ |
-  | dfs.nameservices                   | 自定义 HDFS 集群的名称。                                     |
-  | dfs.ha.namenodes.xxx              | 自定义 NameNode 的名称，多个名称以逗号 (,) 分隔。其中 `xxx` 为 `dfs.nameservices` 中自定义的HDFS 服务的名称。 |
-  | dfs.namenode.rpc-address.xxx.nn    | 指定 NameNode 的 RPC 地址信息。其中 `nn` 表示 `dfs.ha.namenodes.xxx`  中自定义的 NameNode 的名称。 |
+  | ------------------------------------------------------- | --------------------------- |
+  | dfs.nameservices                  | 自定义 HDFS 集群的名称。                                     |
+  | dfs.ha.namenodes.XXX              | 自定义 NameNode 的名称，多个名称以逗号 (,) 分隔，双引号内不允许出现空格。  </br>其中 `xxx` 为 `dfs.nameservices` 中自定义的HDFS 服务的名称。 |
+  | dfs.namenode.rpc-address.XXX.NN    | 指定 NameNode 的 RPC 地址信息。  </br>其中 `NN` 表示 `dfs.ha.namenodes.XXX` 中自定义 NameNode 的名称。 |
   | dfs.client.failover.proxy.provider | 指定客户端连接的 NameNode 的提供者，默认为 `org.apache.hadoop.hdfs.server.namenode.ha.ConfiguredFailoverProxyProvider`。 |
 
 #### Amazon S3
@@ -257,13 +276,15 @@ PROPERTIES ("<key1>" = "<value1>"[, "<key2>" = "<value2>" ...])
 
   导入作业的超时时间。单位：秒。默认超时时间为 4 小时。建议超时时间小于 6 小时。如果导入作业在设定的时限内未完成，会自动取消，变成 **CANCELLED** 状态。
 
-  > 说明：通常情况下，您不需要手动设置导入作业的超时时间。只有当导入作业无法在默认的超时时间内完成时，才推荐您手动设置导入作业的超时时间。
+  > **说明**
+  >
+  > 通常情况下，您不需要手动设置导入作业的超时时间。只有当导入作业无法在默认的超时时间内完成时，才推荐您手动设置导入作业的超时时间。
 
   推荐超时时间大于下面公式的计算值：
 
   **超时时间 > (待导入数据文件的总大小 x 待导入数据文件及相关物化视图的个数)/(平均导入速度 x 导入并发数)**
 
-    > 说明：
+    > **说明**
     >
     > - “平均导入速度”是指目前 StarRocks 集群的平均导入速度。由于每个 StarRocks 集群的机器环境不同、且集群允许的并发查询任务数也不同，因此，StarRocks 集群的平均导入速度需要根据历史导入速度进行推测。
     >
@@ -281,7 +302,9 @@ PROPERTIES ("<key1>" = "<value1>"[, "<key2>" = "<value2>" ...])
 
   - 如果设置最大容忍率为 `0`，则 StarRocks 在导入过程中不会忽略错误的数据行。当导入的数据行中有错误时，导入作业会失败，从而保证数据的正确性。
   - 如果设置最大容忍率大于 `0`，则 StarRocks 在导入过程中会忽略错误的数据行。这样，即使导入的数据行中有错误，导入作业也能成功。
-    > 说明：这里因数据质量不合格而过滤掉的数据行，不包括通过 WHERE 子句过滤掉的数据行。
+    > **说明**
+    >
+    > 这里因数据质量不合格而过滤掉的数据行，不包括通过 WHERE 子句过滤掉的数据行。
 
   如果因为设置最大容忍率为 `0` 而导致作业失败，可以通过 [SHOW LOAD](/sql-reference/sql-statements/data-manipulation/SHOW%20LOAD.md) 语句来查看导入作业的结果信息。然后，判断错误的数据行是否可以被过滤掉。如果可以被过滤掉，则可以根据结果信息中的 `dpp.abnorm.ALL` 和 `dpp.norm.ALL` 来计算导入作业的最大容忍率，然后调整后重新提交导入作业。计算公式如下：
 
@@ -513,7 +536,9 @@ WITH BROKER "mybroker"
 );
 ```
 
-> 说明：上述示例中，因为 `example8.csv` 和 `table8` 所包含的列不能按顺序依次对应，因此需要通过 `columns` 参数来设置 `example8.csv` 和 `table8` 之间的列映射关系。
+> **说明**
+>
+> 上述示例中，因为 `example8.csv` 和 `table8` 所包含的列不能按顺序依次对应，因此需要通过 `columns` 参数来设置 `example8.csv` 和 `table8` 之间的列映射关系。
 
 #### 设置筛选条件
 
@@ -538,7 +563,9 @@ WITH BROKER "mybroker"
 );
 ```
 
-> 说明：上述示例中，虽然 `example9.csv` 和 `table9` 所包含的列数目相同、并且按顺序一一对应，但是因为需要通过 WHERE 子句指定基于列的过滤条件，因此需要通过 `columns` 参数对 `example9.csv` 中的列进行临时命名。
+> **说明**
+>
+> 上述示例中，虽然 `example9.csv` 和 `table9` 所包含的列数目相同、并且按顺序一一对应，但是因为需要通过 WHERE 子句指定基于列的过滤条件，因此需要通过 `columns` 参数对 `example9.csv` 中的列进行临时命名。
 
 #### 导入数据到含有 HLL 类型列的表
 
@@ -569,7 +596,7 @@ WITH BROKER "mybroker"
 );
 ```
 
-> 说明：
+> **说明**
 >
 > 上述示例中，通过 `column_list` 参数，把 `example10.csv` 中的三列按顺序依次临时命名为 `id`、`temp1`、`temp2`，然后使用函数指定数据转换规则，包括：
 >
@@ -677,7 +704,9 @@ WITH BROKER "mybroker"
 );
 ```
 
-> 说明：导入 Parquet 格式的数据时，默认通过文件扩展名 (**.parquet**) 判断数据文件的格式。如果文件名称中没有包含扩展名，则必须通过 `FORMAT AS` 参数指定数据文件格式为 Parquet。
+> **说明**
+>
+> 导入 Parquet 格式的数据时，默认通过文件扩展名 (**.parquet**) 判断数据文件的格式。如果文件名称中没有包含扩展名，则必须通过 `FORMAT AS` 参数指定数据文件格式为 Parquet。
 
 ### 导入 ORC 格式的数据
 
@@ -704,7 +733,7 @@ WITH BROKER "mybroker"
 );
 ```
 
-> 说明：
+> **说明**
 >
 > - 导入 Parquet 格式的数据时，默认通过文件扩展名 (**.orc**) 判断数据文件的格式。如果文件名称中没有包含扩展名，则必须通过 `FORMAT AS` 参数指定数据文件格式为 Parquet。
 >
