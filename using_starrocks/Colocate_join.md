@@ -141,7 +141,7 @@ ALTER TABLE tbl SET ("colocate_with" = "");
 
 Colocation 表的副本分布需遵循 Group 中指定的分布，所以其副本修复和均衡相较于普通分片有所区别。
 
-Group 具有 **Stable** 属性，当 **Stable** 为 **true** 时（即 Stable 状态），表示当前 Group 内的表的所有分片没有正在进行的变动，Colocation 特性可以正常使用。当 **Stable** 为 **false** 时（即 Unstable 状态），表示当前 Group 内有部分表的分片正在做修复或迁移，此时，相关表的 Colocate Join 将退化为普通 Join。
+Group 具有 **IsStable** 属性，当 **IsStable** 为 **true** 时（即 Stable 状态），表示当前 Group 内的表的所有分片没有正在进行的变动，Colocation 特性可以正常使用。当 **IsStable** 为 **false** 时（即 Unstable 状态），表示当前 Group 内有部分表的分片正在做修复或迁移，此时，相关表的 Colocate Join 将退化为普通 Join。
 
 ### 副本修复
 
@@ -423,7 +423,3 @@ StarRocks 提供了多个与 Colocation Join 有关的 HTTP Restful API，用于
     `返回：200`
 
     其中 Body 是以嵌套数组表示的 Bucket Seq 以及每个分桶中分片所在 BE 的 ID。
-
-    > 注意
-    >
-    > 使用该命令，需要将 FE 的配置 `tablet_sched_disable_colocate_balance` 设为 `true`，即关闭系统自动 Colocation 副本修复和均衡。否则在修改数据分布设置后可能会被系统自动重置。

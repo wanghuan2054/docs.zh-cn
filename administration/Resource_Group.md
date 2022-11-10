@@ -51,7 +51,7 @@
 
 您可以为每个资源组关联一个或多个分类器。系统将会根据所有分类器中设置的条件，为每个查询任务选择一个匹配度最高的分类器，并根据生效的分类器所属的资源组为该查询任务分配资源。
 
-分类器可以包含以下四个条件：
+分类器可以包含以下条件：
 
 - `user`：用户名。
 - `role`：用户所属的 Role。
@@ -172,7 +172,7 @@ SHOW RESOURCE GROUPS;
 查询指定的资源组和分类器。
 
 ```SQL
-SHOW RESOURCE GROUP group_name；
+SHOW RESOURCE GROUP group_name;
 ```
 
 示例：

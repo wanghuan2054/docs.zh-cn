@@ -16,7 +16,7 @@
   + [数据模型](/table_design/Data_model.md)
   + 数据分布
     + [数据分布](/table_design/Data_distribution.md)
-    + [动态分区](/table_design/dynamic_partition.md)
+    + [动态分区](/table_design/dynamic_partitioning.md)
     + [临时分区](/table_design/Temporary_partition.md)
   + [排序键和前缀索引](/table_design/Sort_key.md)
 + 导入数据
@@ -115,11 +115,13 @@
       + [ADMIN SHOW CONFIG](/sql-reference/sql-statements/Administration/ADMIN%20SHOW%20CONFIG.md)
       + [ADMIN SHOW REPLICA DISTRIBUTION](/sql-reference/sql-statements/Administration/ADMIN%20SHOW%20REPLICA%20DISTRIBUTION.md)
       + [ADMIN SHOW REPLICA STATUS](/sql-reference/sql-statements/Administration/ADMIN%20SHOW%20REPLICA%20STATUS.md)
+      + [ALTER RESOURCE GROUP](/sql-reference/sql-statements/Administration/ALTER%20RESOURCE%20GROUP.md)
       + [ALTER SYSTEM](/sql-reference/sql-statements/Administration/ALTER%20SYSTEM.md)
       + [CANCEL DECOMMISSION](/sql-reference/sql-statements/Administration/CANCEL%20DECOMMISSION.md)
       + [CREATE RESOURCE GROUP](/sql-reference/sql-statements/Administration/CREATE%20RESOURCE%20GROUP.md)
       + [CREATE FILE](/sql-reference/sql-statements/Administration/CREATE%20FILE.md)
       + [DROP FILE](/sql-reference/sql-statements/Administration/DROP%20FILE.md)
+      + [DROP RESOURCE GROUP](/sql-reference/sql-statements/Administration/DROP%20RESOURCE%20GROUP.md)
       + [INSTALL PLUGIN](/sql-reference/sql-statements/Administration/INSTALL%20PLUGIN.md)
       + [SHOW BACKENDS](/sql-reference/sql-statements/Administration/SHOW%20BACKENDS.md)
       + [SHOW BROKER](/sql-reference/sql-statements/Administration/SHOW%20BROKER.md)
@@ -129,6 +131,7 @@
       + [SHOW INDEX](/sql-reference/sql-statements/Administration/SHOW%20INDEX.md)
       + [SHOW PLUGINS](/sql-reference/sql-statements/Administration/SHOW%20PLUGINS.md)
       + [SHOW PROCESSLIST](/sql-reference/sql-statements/Administration/SHOW%20PROCESSLIST.md)
+      + [SHOW RESOURCE GROUP](/sql-reference/sql-statements/Administration/SHOW%20RESOURCE%20GROUP.md)
       + [SHOW TABLE STATUS](/sql-reference/sql-statements/Administration/SHOW%20TABLE%20STATUS.md)
       + [SHOW FILE](/sql-reference/sql-statements/Administration/SHOW%20FILE.md)
       + [UNINSTALL PLUGIN](/sql-reference/sql-statements/Administration/UNINSTALL%20PLUGIN.md)
@@ -140,6 +143,7 @@
       + [ALTER RESOURCE](/sql-reference/sql-statements/data-definition/ALTER%20RESOURCE.md)
       + [ANALYZE TABLE](/sql-reference/sql-statements/data-definition/ANALYZE%20TABLE.md)
       + [BACKUP](/sql-reference/sql-statements/data-definition/BACKUP.md)
+      + [CANCEL ALTER TABLE](/sql-reference/sql-statements/data-definition/CANCEL%20ALTER%20TABLE.md)
       + [CANCEL BACKUP](/sql-reference/sql-statements/data-definition/CANCEL%20BACKUP.md)
       + [CANCEL RESTORE](/sql-reference/sql-statements/data-definition/CANCEL%20RESTORE.md)
       + [CREATE ANALYZE](/sql-reference/sql-statements/data-definition/CREATE%20ANALYZE.md)
@@ -496,16 +500,20 @@
   + [系统变量](/reference/System_variable.md)
   + [错误码](/reference/Error_code.md)
   + [系统限制](/reference/System_limit.md)
++ 导出数据
+  + [使用 Broker 导出数据](/unloading/Export.md)
+  + [Spark Connector](/unloading/Spark_connector.md)
+  + [Flink Connector](/unloading/Flink_connector.md)
 + 常见问题解答
   + [部署运维](/faq/Deploy_faq.md)
-  + 数据迁移
+  + 导入导出
     + 导入
       + [导入通用 FAQ](/faq/loading/Loading_faq.md)
       + [Stream Load](/faq/loading/Stream_load_faq.md)
       + [Routine Load](/faq/loading/Routine_load_faq.md)
       + [Broker Load](/faq/loading/Broker_load_faq.md)
       + [Insert Into](/faq/loading/Insert_into_faq.md)
-      + [MySQL 实时同步至 StarRocks 常见问题](/faq/loading/synchronize_mysql_into_sr.md)
+      + [MySQL 实时同步至 StarRocks](/faq/loading/synchronize_mysql_into_sr.md)
       + [Flink connector](/faq/loading/Flink_connector_faq.md)
       + [DataX](/faq/loading/DataX_faq.md)
       + [CloudCanal 数据导入](/faq/loading/CloudCanal_load_faq.md)

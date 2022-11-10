@@ -223,9 +223,13 @@ FROM data_source
         "property.ssl.ca.location" = "FILE:ca-cert"
         ```
 
-        1.使用 SSL 连接 Kafka 时，需要指定以下参数：
+        4.1 使用SSL连接 Kafka  
+        需要指定以下参数：  
+
+        ```plain text
         "property.security.protocol" = "ssl",
         "property.ssl.ca.location" = "FILE:ca-cert",
+        ```
 
         其中:
         "property.security.protocol" 用于指定连接方式为 SSL。
@@ -241,11 +245,15 @@ FROM data_source
         "property.ssl.key.location" 指定 client 的 private key 的位置。
         "property.ssl.key.password" 指定 client 的 private key 的密码。
 
-        2.使用 SASL 连接 Kafka 时，需要指定以下参数：
+        4.2 使用SASL连接Kafka  
+        需要指定以下参数：
+
+        ```plain text
         "property.security.protocol"="SASL_PLAINTEXT",
         "property.sasl.mechanism"="PLAIN",
         "property.sasl.username"="admin",
         "property.sasl.password"="admin"
+        ```
 
         其中：
         "property.security.protocol" 指定协议为 SASL_PLAINTEXT。
@@ -253,7 +261,7 @@ FROM data_source
         "property.sasl.username" 指定 SASL 的用户名。
         "property.sasl.password" 指定 SASL 的密码。
 
-        3.指定Kafka partition的默认起始offset
+        4.3 指定Kafka partition的默认起始offset  
         如果没有指定`kafka_partitions/kafka_offsets`，默认消费所有分区，此时可以指定`kafka_default_offsets`起始 offset。默认为 `OFFSET_END`，即从末尾开始订阅。
         值为
          1.OFFSET_BEGINNING: 从有数据的位置开始订阅。
@@ -262,6 +270,14 @@ FROM data_source
 
         ```plaintext
         "property.kafka_default_offsets" = "OFFSET_BEGINNING"
+        ```
+
+        4.4 指定Kafka consumer group的group id  
+        如果没有指定`group.id`，StarRocks会根据Routine Load的job name生成一个随机值，具体格式为`{job_name}_{random uuid}`，如`simple_job_0a64fe25-3983-44b2-a4d8-f52d3af4c3e8`。
+         示例：
+
+        ```plaintext
+        "property.group.id" = "group_id_0"
         ```
 
 导入数据格式样例
@@ -373,11 +389,13 @@ FROM KAFKA
 ```
 
 支持两种 JSON 数据格式：
-1）{"category":"a9jadhx","author":"test","price":895}
-2）[
+
+1）`{"category":"a9jadhx","author":"test","price":895}`
+
+2）`[
 {"category":"a9jadhx","author":"test","price":895},
 {"category":"axdfa1","author":"EvelynWaugh","price":1299}
-]
+]`
 
 ### 示例5：指定 `jsonpaths` 导入 JSON 格式数据
 
@@ -425,14 +443,19 @@ FROM KAFKA
 ```
 
 JSON数据格式:
+
+```plaintext
 [
 {"category":"11","title":"SayingsoftheCentury","price":895,"timestamp":1589191587},
 {"category":"22","author":"2avc","price":895,"timestamp":1589191487},
 {"category":"33","author":"3avc","title":"SayingsoftheCentury","timestamp":1589191387}
 ]
+```
 
 说明：
+
 1）如果 JSON 数据是以数组开始，并且数组中每个对象是一条记录，则需要将 `strip_outer_array` 设置成 `true`，表示展平数组。
+
 2）如果 JSON 数据是以数组开始，并且数组中每个对象是一条记录，在设置 `jsonpaths` 时，ROOT 节点实际上是数组中对象。
 
 ### 示例6：指定根节点 `json_root`
@@ -460,6 +483,8 @@ FROM KAFKA
 ```
 
 JSON 数据格式:
+
+```plaintext
 {
 "RECORDS":[
 {"category":"11","title":"SayingsoftheCentury","price":895,"timestamp":1589191587},
@@ -467,3 +492,4 @@ JSON 数据格式:
 {"category":"33","author":"3avc","title":"SayingsoftheCentury","timestamp":1589191387}
 ]
 }
+```

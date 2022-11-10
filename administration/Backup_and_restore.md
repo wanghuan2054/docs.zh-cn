@@ -4,7 +4,7 @@
 
 StarRocks 支持将数据以文件的形式，通过 Broker 备份到远端存储系统中。备份的数据可以从远端存储系统恢复至任意 StarRocks 集群。通过这个功能，您可以定期为 StarRocks 集群中的数据进行快照备份，或者将数据在不同集群间迁移。
 
-Broker 是 StarRocks 集群中一种可选进程，主要用于读写 StarRocks 远端存储上的文件和目录。在使用备份与恢复功能前，您需要部署对应远端存储的 Broker。具体部署步骤，参考[部署 Broker](../quick_start/Deploy.md)
+Broker 是 StarRocks 集群中一种可选进程，主要用于读写 StarRocks 远端存储上的文件和目录。在使用备份与恢复功能前，您需要部署对应远端存储的 Broker。具体部署步骤，参考[部署 Broker](../quick_start/Deploy.md)。
 
 > 注意：
 >
@@ -180,7 +180,7 @@ SHOW RESTORE;
 * SnapshotFinishedTime：本地快照完成时间。
 * DownloadFinishedTime：远端快照下载完成时间。
 * FinishedTime：本次作业完成时间。
-* UnfinishedTasks：在 SNAPSHOTTING，DOWNLOADING, COMMITTING 等阶段，会有多个子任务在同时进行，这里展示的当前阶段，未完成的子任务的 Task ID。
+* UnfinishedTasks：在 SNAPSHOTTING，DOWNLOADING，COMMITTING 等阶段，会有多个子任务在同时进行，这里展示的当前阶段，未完成的子任务的 Task ID。
 * TaskErrMsg：如果有子任务执行出错，这里会显示对应子任务的错误信息。
 * Status：用于记录在整个作业过程中，可能出现的一些状态信息。
 * Timeout：作业的超时时间，单位是秒。

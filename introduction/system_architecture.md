@@ -10,7 +10,7 @@ StarRocks 架构简洁，整个系统的核心只有 FE（Frontend）、BE（Bac
 
 FE 是 StarRocks 的前端节点，负责管理元数据，管理客户端连接，进行查询规划，查询调度等工作。每个 FE 节点都会在内存保留一份完整的元数据，这样每个 FE 节点都能够提供无差别的服务。
 
-FE 根据配置会有两种角色：Follower 和 Observer。Follower 会通过类 Paxos 的 BDBJE 协议选举出一个 Leader。三者区别如下：
+FE 根据配置会有两种角色：Follower 和 Observer。Follower 会通过类 Paxos 的 Berkeley DB Java Edition（BDBJE）协议选举出一个 Leader。三者区别如下：
 
 - Leader
   - 提供元数据读写服务。只有 Leader 节点会对元数据进行写操作，Follower 和 Observer 只有读取权限。Follower 和 Observer 将元数据写入请求路由到 Leader 节点，Leader 更新完数据后，会通过 BDB JE 同步给 Follower 和 Observer。必须有半数以上的 Follower 节点同步成功才算作元数据写入成功。
@@ -37,13 +37,13 @@ BE 是 StarRocks 的后端节点，负责数据存储、SQL执行等工作。
 
 ## 数据管理
 
-StarRocks 使用列式存储，采用分区分桶机制进行数据管理。一张表可以被划分成多个分区，如将一张表按照时间来进行分区，粒度可以是一天，或者一周等。一个分区内的数据可以根据一列或者多列进行分桶，将数据切分成多个 Tablet。Tablet 是 StarRocks 中最小的数据管理单元。每个 Tablet 都会以多副本(replica) 的形式存储在不同的 BE 节点中。您可以自行指定 Tablet 的个数和大小。StarRocks会管理好每个 Tablet 副本的分布信息。
+StarRocks 使用列式存储，采用分区分桶机制进行数据管理。一张表可以被划分成多个分区，如将一张表按照时间来进行分区，粒度可以是一天，或者一周等。一个分区内的数据可以根据一列或者多列进行分桶，将数据切分成多个 Tablet。Tablet 是 StarRocks 中最小的数据管理单元。每个 Tablet 都会以多副本 (replica) 的形式存储在不同的 BE 节点中。您可以自行指定 Tablet 的个数和大小。 StarRocks 会管理好每个 Tablet 副本的分布信息。
 
 下图展示了 StarRocks 的数据划分以及 Tablet 多副本机制。图中，表按照日期划分为 4 个分区，第一个分区进一步切分成 4 个 Tablet。每个 Tablet 使用 3 副本进行备份，分布在 3 个不同的 BE 节点上。
 
 ![data_management](../assets/1.2-2.png)
 
-由于一张表被切分成了多个 Tablet，StarRocks 在执行 SQL 语句时，可以对所有 Tablet实现并发处理，从而充分的利用多机、多核提供的计算能力。用户也可以利用 StarRocks 数据的切分方式，将高并发请求压力分摊到多个物理节点，从而可以通过增加物理节点的方式来扩展系统支持高并发的能力。
+由于一张表被切分成了多个 Tablet，StarRocks 在执行 SQL 语句时，可以对所有 Tablet 实现并发处理，从而充分的利用多机、多核提供的计算能力。用户也可以利用 StarRocks 数据的切分方式，将高并发请求压力分摊到多个物理节点，从而可以通过增加物理节点的方式来扩展系统支持高并发的能力。
 
 Tablet 的分布方式与具体的物理节点没有相关性。在 BE 节点规模发生变化时，比如在扩容、缩容时，**StarRocks 可以做到无需停止服务，直接完成节点的增减。**节点的变化会触发 Tablet 的自动迁移。当节点增加时，一部分 Tablet 会在后台自动被均衡到新增的节点，从而使得数据能够在集群内分布的更加均衡。在节点减少时，下线机器上的 Tablet 会被自动均衡到其他节点，从而自动保证数据的副本数不变。管理员能够非常容易地实现 StarRocks 的弹性伸缩，无需手工进行任何数据的重分布。
 

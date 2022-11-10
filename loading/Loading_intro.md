@@ -6,17 +6,19 @@ StarRocks 通过导入作业实现数据导入。每个导入作业都有一个�
 
 StarRocks 中所有导入方式都提供原子性保证，即同一个导入作业内的所有有效数据要么全部生效，要么全部不生效，不会出现仅导入部分数据的情况。这里的有效数据不包括由于类型转换错误等数据质量问题而被过滤掉的数据。
 
-StarRocks 提供两种访问协议用于提交导入作业：MySQL 协议和 HTTP 协议。不同的导入方式支持的访问协议有所不同，具体请参见本文“导入方式”章节。
+StarRocks 提供两种访问协议用于提交导入作业：MySQL 协议和 HTTP 协议。不同的导入方式支持的访问协议有所不同，具体请参见本文“[导入方式](../loading/Loading_intro.md#导入方式)”章节。
 
 ## 支持的数据类型
 
-StarRocks 支持导入所有数据类型。个别数据类型的导入可能会存在一些限制，具体请参见[数据类型](/sql-reference/sql-statements/data-types/BIGINT.md)。
+StarRocks 支持导入所有数据类型。个别数据类型的导入可能会存在一些限制，具体请参见[数据类型](../sql-reference/sql-statements/data-types/BIGINT.md)。
 
 ## 导入模式
 
 StarRocks 支持两种导入模式：同步导入和异步导入。
 
-> 说明：如果是外部程序接入 StarRocks 的导入，需要先判断使用哪种导入模式，然后再确定接入逻辑。
+> **说明**
+>
+> 如果是外部程序接入 StarRocks 的导入，需要先判断使用哪种导入模式，然后再确定接入逻辑。
 
 ### 同步导入
 
@@ -64,7 +66,9 @@ StarRocks 支持两种导入模式：同步导入和异步导入。
 2. **ETL**<br>
    该阶段执行数据的预处理，包括清洗、分区、排序、聚合等。
 
-   > 说明：如果是 Broker Load 作业，该阶段会直接完成。
+   > **说明**
+   >
+   > 如果是 Broker Load 作业，该阶段会直接完成。
 
 3. **LOADING**<br>
    该阶段先对数据进行清洗和转换，然后将数据发送给 BE 处理。当数据全部导入后，进入等待生效过程，此时，导入作业的状态依旧是 **LOADING**。
@@ -77,7 +81,7 @@ StarRocks 支持两种导入模式：同步导入和异步导入。
 
 ## 导入方式
 
-StarRocks 提供 [Stream Load](/loading/StreamLoad.md)、[Broker Load](/loading/BrokerLoad.md)、 [Routine Load](/loading/RoutineLoad.md)、[Spark Load](/loading/SparkLoad.md) 和 [INSERT](/loading/InsertInto.md) 多种导入方式，满足您在不同业务场景下的数据导入需求。
+StarRocks 提供 [Stream Load](../loading/StreamLoad.md)、[Broker Load](../loading/BrokerLoad.md)、 [Routine Load](../loading/RoutineLoad.md)、[Spark Load](../loading/SparkLoad.md) 和 [INSERT](../loading/InsertInto.md) 多种导入方式，满足您在不同业务场景下的数据导入需求。
 
 | 导入方式           | 协议  | 业务场景                                                     | 数据量（单作业）     | 数据源                                       | 数据格式              | 同步模式 |
 | ------------------ | ----- | ------------------------------------------------------------ | -------------------- | -------------------------------------------- | --------------------- | -------- |
@@ -90,13 +94,13 @@ StarRocks 提供 [Stream Load](/loading/StreamLoad.md)、[Broker Load](/loading/
 
 您可以根据业务场景、数据量、数据源、数据格式和导入频次等来选择合适的导入方式。另外，在选择导入方式时，可以注意以下几点：
 
-- 从 Kafka 导入数据的时候，如果导入过程中有复杂的多表关联和 ETL 预处理，可以先使用 Apache Flink® 对数据进行处理，然后再通过 Stream Load 把数据导入到 StarRocks 中。StarRocks 提供标准的 [flink-connector-starrocks](/loading/Flink-connector-starrocks.md) 插件，可以帮助您把 Flink 中的数据导入到 StarRocks。
+- 从 Kafka 导入数据的时候，如果导入过程中有复杂的多表关联和 ETL 预处理，可以先使用 Apache Flink® 对数据进行处理，然后再通过 Stream Load 把数据导入到 StarRocks 中。StarRocks 提供标准的 [flink-connector-starrocks](../loading/Flink-connector-starrocks.md) 插件，可以帮助您把 Flink 中的数据导入到 StarRocks。
 
-- 如果要导入 Hive 文件，除了可以使用 [Spark Load](/loading/SparkLoad.md) 和 [Broker Load](/loading/BrokerLoad.md) 以外，推荐使用 [Hive 外部表](/data_source/External_table.md#hive-外表)的方式实现导入。
+- 如果要导入 Hive 文件，除了可以使用 [Spark Load](../loading/SparkLoad.md) 和 [Broker Load](../loading/BrokerLoad.md) 以外，推荐使用 [Hive 外部表](../data_source/External_table.md#hive-外表)的方式实现导入。
 
-- 如果要导入 MySQL 数据，除了可以使用 [starrockswriter](/loading/DataX-starrocks-writer.md) 以外，推荐通过 [MySQL 外部表](/data_source/External_table.md#mysql-外部表)的方式，使用 INSERT INTO SELECT 语句实现导入。
+- 如果要导入 MySQL 数据，除了可以使用 [starrockswriter](../loading/DataX-starrocks-writer.md) 以外，推荐通过 [MySQL 外部表](../data_source/External_table.md#mysql-外部表)的方式，使用 INSERT INTO SELECT 语句实现导入。
 
-- 对于 Oracle、PostgreSQL 等数据源，推荐使用 [starrockswriter](/loading/DataX-starrocks-writer.md) 实现导入。
+- 对于 Oracle、PostgreSQL 等数据源，推荐使用 [starrockswriter](../loading/DataX-starrocks-writer.md) 实现导入。
 
 下图详细展示了在各种数据源场景下，应该选择哪一种导入方式。
 
@@ -106,9 +110,9 @@ StarRocks 提供 [Stream Load](/loading/StreamLoad.md)、[Broker Load](/loading/
 
 您可以通过设置参数来限制单个导入作业的内存使用，以防止导入作业占用过多内存，特别是在导入并发较高的情况下。同时，您也需要注意避免设置过小的内存使用上限，因为内存使用上限过小，导入过程中可能会因为内存使用量达到上限而频繁地将内存中的数据刷出到磁盘，进而可能影响导入效率。建议您根据具体的业务场景要求，合理地设置内存使用上限。
 
-不同的导入方式限制内存的方式略有不同，具体请参见 [Stream Load](/loading/StreamLoad.md)、[Broker Load](/loading/BrokerLoad.md)、[Routine Load](/loading/RoutineLoad.md)、[Spark Load](/loading/SparkLoad.md) 和 [INSERT](/loading/InsertInto.md)。需要注意的是，一个导入作业通常都会分布在多个 BE 上执行，这些内存参数限制的是一个导入作业在单个 BE 上的内存使用，而不是在整个集群上的内存使用总和。
+不同的导入方式限制内存的方式略有不同，具体请参见 [Stream Load](../loading/StreamLoad.md)、[Broker Load](../loading/BrokerLoad.md)、[Routine Load](../loading/RoutineLoad.md)、[Spark Load](../loading/SparkLoad.md) 和 [INSERT](../loading/InsertInto.md)。需要注意的是，一个导入作业通常都会分布在多个 BE 上执行，这些内存参数限制的是一个导入作业在单个 BE 上的内存使用，而不是在整个集群上的内存使用总和。
 
-您还可以通过设置一些参数来限制在单个 BE 上运行的所有导入作业的总的内存使用上限。可参考本文“[系统配置](/loading/Loading_intro.md#系统配置)”章节。
+您还可以通过设置一些参数来限制在单个 BE 上运行的所有导入作业的总的内存使用上限。可参考本文“[系统配置](../loading/Loading_intro.md#系统配置)”章节。
 
 ## 系统配置
 
@@ -130,7 +134,9 @@ StarRocks 提供 [Stream Load](/loading/StreamLoad.md)、[Broker Load](/loading/
 
   StarRocks 集群每个数据库中正在运行的导入作业的最大个数，默认值为 100。当数据库中正在运行的导入作业达到最大个数限制时，后续提交的导入作业不会执行。如果是同步的导入作业，作业会被拒绝；如果是异步的导入作业，作业会在队列中等待。
 
-  > 说明：所有模式的作业均包含在内、统一计数。
+  > **说明**
+  >
+  > 所有模式的作业均包含在内、统一计数。
 
 - `label_keep_max_second`
 
@@ -146,7 +152,7 @@ StarRocks 提供 [Stream Load](/loading/StreamLoad.md)、[Broker Load](/loading/
 
 - `write_buffer_size`
 
-  BE 上内存块的大小阈值，默认阈值为 100 MB。导入的数据在 BE 上会先写入一个内存块，当内存块的大小达到这个阈值以后才会写回磁盘。如果阈值过小，可能会导致 BE 上存在大量的小文件，影响查询的性能，这时候可以适当提高这个阈值来减少文件数量。如果阈值过大，可能会导致远端程序呼叫（Remote Procedure Call，简称 RPC）超时，这时候需要配合下面的 `tablet_writer_rpc_timeout_sec` 参数来适当地调整 `write_buffer_size` 参数的取值。
+  BE 上内存块的大小阈值，默认阈值为 100 MB。导入的数据在 BE 上会先写入一个内存块，当内存块的大小达到这个阈值以后才会写回磁盘。如果阈值过小，可能会导致 BE 上存在大量的小文件，影响查询的性能，这时候可以适当提高这个阈值来减少文件数量。如果阈值过大，可能会导致远程过程调用（Remote Procedure Call，简称 RPC）超时，这时候需要配合下面的 `tablet_writer_rpc_timeout_sec` 参数来适当地调整 `write_buffer_size` 参数的取值。
 
 - `tablet_writer_rpc_timeout_sec`
 
@@ -167,4 +173,4 @@ StarRocks 提供 [Stream Load](/loading/StreamLoad.md)、[Broker Load](/loading/
 
 ## 常见问题
 
-请参见[导入常见问题](https://docs.starrocks.com/zh-cn/main/faq/loading/Loading_faq)。
+请参见[导入常见问题](../faq/Exporting_faq.md)。

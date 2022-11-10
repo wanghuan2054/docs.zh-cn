@@ -115,7 +115,7 @@ DISTRIBUTED BY HASH(user_id) BUCKETS 8;
 
 从数据导入至数据查询阶段，聚合模型内部同一排序键的数据会多次聚合，聚合的具体时机和机制如下：
 
-1. 数据导入阶段：数据按批次导入至聚合模型时，每一个批次的数据形成一个版本，在一个版本中，同一排序键的数据会进行一次聚合。
+1. 数据导入阶段：数据按批次导入至聚合模型时，每一个批次的数据形成一个版本。在一个版本中，同一排序键的数据会进行一次聚合。
 
 1. 后台文件合并阶段 (Compaction) ：数据分批次多次导入至聚合模型中，会生成多个版本的文件，多个版本的文件定期合并成一个大版本文件时，同一排序键的数据会进行一次聚合。
 
@@ -331,8 +331,7 @@ create table users (
     property0 tinyint NOT NULL,
     property1 tinyint NOT NULL,
     property2 tinyint NOT NULL,
-    property3 tinyint NOT NULL,
-    ....
+    property3 tinyint NOT NULL
 ) PRIMARY KEY (user_id)
 DISTRIBUTED BY HASH(user_id) BUCKETS 4
 PROPERTIES("replication_num" = "3",
@@ -366,7 +365,7 @@ PROPERTIES("replication_num" = "3",
 
 - 自 2.4.0 版本起，主键模型支持单表和多表物化视图。
 
-- 暂不支持使用 ALTER TABLE 修改列类型。 ALTER TABLE 的相关语法说明和示例，请参见 [ALTER TABLE](../sql-reference/sql-statements/data-definition/ALTER%20TABLE.md)。
+- 使用 [ALTER TABLE](../sql-reference/sql-statements/data-definition/ALTER%20TABLE.md) 时暂不支持修改主键的列类型，不支持调整指标列的顺序。
 
 ### 下一步
 

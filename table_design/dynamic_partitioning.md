@@ -83,5 +83,4 @@ ALTER TABLE site_access SET("dynamic_partition.enable"="true");
 > 说明：
 >
 > - 可以执行 SHOW CREATE TABLE 命令，查看表的动态分区属性。
->
 > - ALTER TABLE 也适用于修改 `PROPERTIES` 中的其他配置项。

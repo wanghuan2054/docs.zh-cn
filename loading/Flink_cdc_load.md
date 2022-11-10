@@ -1,6 +1,6 @@
 # 从 MySQL 实时同步
 
-本文介绍如何将 MySQL 的数据实时同步（秒级）至 StarRocks，支撑企业实时分析和处理海量数据的需求。
+本文介绍如何将 MySQL 的数据实时（秒级）同步至 StarRocks，支撑企业实时分析和处理海量数据的需求。
 
 ## 基本原理
 
@@ -8,6 +8,7 @@
 
 实时同步 MySQL 至 StarRocks 分成同步库表结构、同步数据两个阶段进行。首先 StarRocks Migration Tool (数据迁移工具，以下简称 SMT) 简化待同步库表的创建。然后 Flink 集群运行 Flink job，同步 MySQL 全量及增量数据至 StarRocks。具体同步流程如下：
 
+> 说明：
 > MySQL 实时同步至 StarRocks 能够保证端到端的 exactly-once 的语义一致性。
 
 1. **同步库表结构**
@@ -18,7 +19,7 @@
 
    Flink SQL 客户端执行导入数据的 SQL 语句（`INSERT INTO SELECT`语句），向 Flink 集群提交一个或者多个长时间运行的 Flink job。Flink集群运行 Flink job ，[Flink cdc connector](https://ververica.github.io/flink-cdc-connectors/master/content/快速上手/build-real-time-data-lake-tutorial-zh.html) 先读取数据库的历史全量数据，然后无缝切换到增量读取，并且发给 flink-starrocks-connector，最后  flink-starrocks-connector  攒微批数据同步至 StarRocks。
 
-   > 注意：
+   > **注意**
    >
    > 仅支持同步 DML，不支持同步 DDL。
 
@@ -74,7 +75,7 @@
 2. **下载 [Flink CDC connector](https://github.com/ververica/flink-cdc-connectors/releases)**。本示例的数据源为 MySQL，因此下载 flink-sql-connector-**mysql**-cdc-x.x.x.jar。并且版本需支持对应的 Flink 版本，两者版本支持度，请参见 [Supported Flink Versions](https://ververica.github.io/flink-cdc-connectors/release-2.2/content/about.html#supported-flink-versions)。由于本文使用 Flink  1.14.5，因此可以使用 flink-sql-connector-mysql-cdc-2.2.0.jar。
 
       ```Bash
-      wget https://repo1.maven.org/maven2/com/ververica/flink-sql-connector-mysql-cdc/2.1.1/flink-sql-connector-mysql-cdc-2.2.0.jar
+      wget https://repo1.maven.org/maven2/com/ververica/flink-sql-connector-mysql-cdc/2.2.0/flink-sql-connector-mysql-cdc-2.2.0.jar
       ```
 
 3. **下载 [flink-connector-starrocks](https://search.maven.org/artifact/com.starrocks/flink-connector-starrocks)**，并且其版本需要对应 Flink 的版本。
@@ -91,7 +92,7 @@
 
 4. 将 Flink CDC connector、Flink-connector-starrocks 的 JAR 包 **flink-sql-connector-mysql-cdc-2.2.0.jar**、**1.2.3_flink-1.14_2.11.jar** 移动至 Flink 的 **lib** 目录。
 
-   > **注意**：
+   > **注意**
    >
    > 如果 Flink 已经处于运行状态中，则需要重启 Flink ，加载并生效 JAR 包。
    >
@@ -265,7 +266,7 @@
     ./bin/sql-client.sh -f flink-create.all.sql
     ```
 
-    > 注意：
+    > **注意**
     >
     > - 需要确保 Flink 集群已经启动。可通过命令 `flink/bin/start-cluster.sh` 启动。
     >
@@ -478,7 +479,7 @@ flink.starrocks.sink.properties.strip_outer_array=true
 
 3. 修改文件中的 SQL 语句，将所有的  INSERT INTO 语句调整位置到文件末尾。然后在第一条 INSERT语句的前面加上`EXECUTE STATEMENT SET BEGIN;` 在最后一 INSERT 语句后面加上一行`END;`。
 
-   > 注意：
+   > **注意**
    >
    > CREATE DATABASE、CREATE TABLE  的位置保持不变。
 

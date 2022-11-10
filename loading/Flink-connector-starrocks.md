@@ -3,7 +3,7 @@
 ## 功能简介
 
 StarRocks 提供 flink-connector-starrocks，导入数据至 StarRocks，相比于 Flink 官方提供的 flink-connector-jdbc，导入性能更佳。
-flink-connector-starrocks 的内部实现是通过缓存并批量由 stream load 导入。
+flink-connector-starrocks 的内部实现是通过缓存并批量由 Stream Load 导入。
 
 ## 支持的数据源
 
@@ -20,7 +20,7 @@ flink-connector-starrocks 的内部实现是通过缓存并批量由 stream load
 
 点击 [版本信息](https://search.maven.org/search?q=g:com.starrocks) 查看页面Latest Version信息，替换下面x.x.x内容
 
-```xml
+```Plain text
 <dependency>
     <groupId>com.starrocks</groupId>
     <artifactId>flink-connector-starrocks</artifactId>
@@ -68,7 +68,6 @@ flink-connector-starrocks 的内部实现是通过缓存并批量由 stream load
         )
     );
 
-
     // -------- 原始数据为 CSV 格式 --------
     class RowData {
         public int score;
@@ -109,8 +108,7 @@ flink-connector-starrocks 的内部实现是通过缓存并批量由 stream load
                 slots[1] = streamRowData.name;
             }
         )
-    )
-    ;
+    );
     ```
 
 * 如您使用 Flink Table API，则需要参考如下命令。
@@ -118,7 +116,8 @@ flink-connector-starrocks 的内部实现是通过缓存并批量由 stream load
     ```scala
     // -------- 原始数据为 CSV 格式 --------
     // create a table with `structure` and `properties`
-    // Needed: Add `com.starrocks.connector.flink.table.StarRocksDynamicTableSinkFactory` to: `src/main/resources/META-INF/services/org.apache.flink.table.factories.Factory`
+    // Needed: Add `com.starrocks.connector.flink.table.StarRocksDynamicTableSinkFactory`
+    //         to: `src/main/resources/META-INF/services/org.apache.flink.table.factories.Factory`
     tEnv.executeSql(
         "CREATE TABLE USER_RESULT(" +
             "name VARCHAR," +
@@ -216,4 +215,4 @@ flink-connector-starrocks 导入底层调用的 Stream Load实现，可以在 fl
 
 * 日志中如果有 `http://$fe:${http_port}/api/$db/$tbl/_stream_load` 生成，表示成功触发了 Stream Load 任务，任务结果也会打印在 flink 日志中，返回值可参考 [Stream Load 任务状态](../loading/StreamLoad#创建导入任务)。
 
-* 日志中如果没有上述信息，请在论坛提问 [StarRocks 论坛](https://forum.starrocks.com/)，我们会及时跟进。
+* 日志中如果没有上述信息，请在 [StarRocks 论坛](https://forum.starrocks.com/) 提问，我们会及时跟进。
