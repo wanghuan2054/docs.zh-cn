@@ -44,7 +44,7 @@ CREATE USER 'jack'@['example_domain'] IDENTIFIED BY '12345';
 ```
 
 > 说明
-> 您可以通过 `PASSWORD()` 方法获得暗文密码。
+> 您可以通过 `PASSWORD()` 方法获得密文密码。
 
 ## 修改用户密码
 
@@ -109,7 +109,7 @@ GRANT privilege_list ON RESOURCE resource_name TO user_identity [ROLE role_name]
 参数：
 
 * `privilege_list`：需要赋予的权限列表，以逗号分隔。
-  * NODE_PRIV：节点变更权限。包括 FE、BE、BROKER 节点的添加、删除、下线等操作。目前该权限只能授予 Root 用户。
+  * NODE_PRIV：节点变更权限。包括 FE、BE、BROKER 节点的添加、删除、下线等操作。目前该权限只能授予 root 用户。
   * GRANT_PRIV：权限变更权限。允许执行包括授权、撤权、添加/删除/变更 用户/角色等操作。
   * SELECT_PRIV：对数据库、表的只读权限。
   * LOAD_PRIV：对数据库、表的写权限。包括 LOAD、INSERT、DELETE 等。
@@ -378,13 +378,13 @@ StarRocks 初始化时，会自动创建如下角色和用户：
 
 这里列举一些 StarRocks 权限系统的使用场景。
 
-### 场景一 权限分配
+### 场景一：权限分配
 
 StarRocks 集群的使用者分为管理员（Admin）、开发工程师（RD）和用户（Client）。其中管理员拥有整个集群的所有权限，主要负责集群的搭建、节点管理等。开发工程师负责业务建模，包括建库建表、数据的导入和修改等。用户访问不同的数据库和表来获取数据。
 
 在这种场景下，可以为管理员赋予 ADMIN 权限或 GRANT 权限。对 RD 赋予对任意或指定数据库表的 CREATE、DROP、ALTER、LOAD、SELECT 权限。对 Client 赋予对任意或指定数据库表 SELECT 权限。同时，也可以通过创建不同的角色，来简化对多个用户的授权操作。
 
-### 场景二 多业务线
+### 场景二：多业务线
 
 一个集群内有多个业务，每个业务可能使用一个或多个数据。每个业务需要管理自己的用户。在这种场景下，管理员用户可以为每个数据库创建一个拥有 DATABASE 层级 GRANT 权限的用户。该用户仅可以对用户进行指定的数据库的授权。
 

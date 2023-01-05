@@ -83,9 +83,9 @@ NEGATIVE：
 
 column_separator：
 
-用于指定导入文件中的列分隔符。默认为 \t
-如果是不可见字符，则需要加\\x作为前缀，使用十六进制来表示分隔符。
-如hive文件的分隔符\x01，指定为"\\x01"
+用于指定导入文件中的列分隔符。默认为：\t。
+如果是不可见字符，则需要加 \\x 作为前缀，使用十六进制来表示分隔符。
+如 hive 文件的分隔符 \x01，指定为 "\\x01"。
 
 file_type：
 
@@ -101,8 +101,8 @@ column_list：
 
 SET:
 
-如果指定此参数，可以将源文件某一列按照函数进行转化，然后将转化后的结果导入到table中。语法为 `column_name` = expression。
-仅支持Spark SQL built-in functions，具体可参考 https://spark.apache.org/docs/2.4.6/api/sql/index.html。
+如果指定此参数，可以将源文件某一列按照函数进行转化，然后将转化后的结果导入到 table 中。语法为 `column_name` = expression。
+仅支持 Spark SQL built-in functions，具体可参考 https://spark.apache.org/docs/2.4.6/api/sql/index.html。
 举几个例子帮助理解。
 例1: 表中有3个列“c1, c2, c3", 源文件中前两列依次对应(c1,c2)，后两列之和对应c3；那么需要指定 columns (c1,c2,tmp_c3,tmp_c4) SET (c3=tmp_c3+tmp_c4);
 例2: 表中有3个列“year, month, day"，源文件中只有一个时间列，为”2018-06-01 01:02:03“格式。
@@ -115,12 +115,11 @@ WHERE:
 
 3.resource_name
 
-所使用的 spark 资源名称，可以通过 `SHOW RESOURCES` 命令查看。
+所使用的 Spark 资源名称，可以通过 `SHOW RESOURCES` 命令查看。
 
 4.resource_properties
 
-当用户有临时性的需求，比如增加任务使用的资源而修改 Spark configs，可以在这里设置，设置仅对本次任务生效，并不影响 StarRocks 集群中已有的配置。
-另外不同的 broker，以及不同的访问方式，需要提供的信息不同。可以查看 broker 使用文档。
+[Spark 资源的配置](../data-definition/CREATE%20RESOURCE.md#spark-资源)。当用户有临时性的需求，比如增加任务使用的资源而修改 Spark 和 HDFS 配置，可以在这里设置，设置仅对本次任务生效，并不影响 StarRocks 集群中已有的配置。
 
 5.opt_properties
 
@@ -138,7 +137,7 @@ WHERE:
 timeout：         指定导入操作的超时时间。默认超时为 4 小时。单位秒。
 max_filter_ratio：最大容忍可过滤（数据不规范等原因）的数据比例。默认零容忍。
 strict_mode：     是否对数据进行严格限制。默认为 false。
-timezone:         指定某些受时区影响的函数的时区，如 strftime/alignment_timestamp/from_unixtime 等等，具体请查阅 [时区] 文档。如果不指定，则使用 "Asia/Shanghai" 时区。
+timezone:         指定某些受时区影响的函数的时区，如 strftime/alignment_timestamp/from_unixtime 等等，具体请查阅 [时区](https://docs.starrocks.io/zh-cn/latest/administration/timezone) 文档。如果不指定，则使用 "Asia/Shanghai" 时区。
 ```
 
 6.导入数据格式样例
@@ -146,11 +145,11 @@ timezone:         指定某些受时区影响的函数的时区，如 strftime/a
 ```plain text
 1.整型类（TINYINT/SMALLINT/INT/BIGINT/LARGEINT）：1, 1000, 1234。
 
-2.浮点类（FLOAT/DOUBLE/DECIMAL）：1.1, 0.23, .356
+2.浮点类（FLOAT/DOUBLE/DECIMAL）：1.1, 0.23, .356。
 
 3.日期类（DATE/DATETIME）：2017-10-03, 2017-06-13 12: 34: 03。（注：如果是其他日期格式，可以在导入命令中，使用 strftime 或者 time_format 函数进行转换）
 
-4.字符串类（CHAR/VARCHAR）："I am a student", "a"
+4.字符串类（CHAR/VARCHAR）："I am a student", "a"。
 NULL 值：\N
 ```
 
@@ -174,7 +173,7 @@ PROPERTIES
 );
 ```
 
-其中 hdfs_host 为 namenode 的 host，hdfs_port 为 fs.defaultFS 端口（默认 9000）
+其中 hdfs_host 为 namenode 的 host，hdfs_port 为 fs.defaultFS 端口（默认 9000）。
 
 ### 从HDFS导入"负"数据
 
@@ -233,7 +232,7 @@ WITH RESOURCE 'my_spark';
 
 ### 提取文件路径中的分区字段
 
-如果需要，则会根据表中定义的字段类型解析文件路径中的分区字段（partitioned fields），类似 Spark 中 Partition Discovery 的功能
+如果需要，则会根据表中定义的字段类型解析文件路径中的分区字段（partitioned fields），类似 Spark 中 Partition Discovery 的功能。
 
 ```sql
 LOAD LABEL example_db.label10

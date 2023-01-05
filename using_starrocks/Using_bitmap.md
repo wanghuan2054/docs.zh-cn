@@ -4,18 +4,18 @@
 
 Bitmap 去重是指，当给定一个数组 A， 其取值范围为 [0, n)， 可采用 (n+7)/8 的字节长度的 bitmap 对该数组去重， 初始化为全 0；逐个处理数组 A 的元素， 以 A 中元素取值作为 bitmap 的下标， 将该下标的 bit 置 1； 最后统计 bitmap 中 1 的个数即为数组 A 的 count distinct 结果。
 
-与传统的使用 [count distinct](#传统count_distinct计算) 方式 Bitmap 的优势主要体现在以下两点 ：
+与传统使用 [count distinct](#传统 count distinct 计算) 方式相比， Bitmap 的优势主要体现在以下两点 ：
 
-1. 空间优势：通过用 Bitmap 的一个 Bit 位表示对应下标是否存在，能节省大量存储空间；例如对 INT32 去重，使用普通 Bitmap 所需的存储空间只占传统去重的 1/32。StarRocks 采用 Roaring Bitmap 的优化实现，对于稀疏的 Bitmap，所占用的存储空间会进一步降低。
-2. 时间优势：Bitmap 的去重涉及的计算包括对给定下标的 Bit 置位，统计 Bitmap 的置位个数，分别为 O(1) 操作和 O(n) 操作， 并且后者可使用 CLZ，CTZ 等指令高效计算。 此外，Bitmap 去重在 MPP 执行引擎中还可以并行加速处理，每个计算节点各自计算本地子 Bitmap， 使用 BITOR 操作将这些子 Bitmap 合并成最终的 Bitmap。BITOR 操作比基于 sort 和基于 hash 的去重效率更高，且无条件依赖和数据依赖，可向量化执行。
+1. 空间优势：通过用 Bitmap 的一个 Bit 位表示对应下标是否存在，能节省大量存储空间。例如对 INT 去重，使用普通 Bitmap 所需的存储空间只占传统去重的 1/32。StarRocks 采用 Roaring Bitmap 的优化实现，对于稀疏的 Bitmap，所占用的存储空间会进一步降低。
+2. 时间优势：Bitmap 的去重涉及的计算包括对给定下标的 Bit 置位，统计 Bitmap 的置位个数，分别为 O(1) 操作和 O(n) 操作，并且后者可使用 CLZ，CTZ 等指令高效计算。 此外，Bitmap 去重在 MPP 执行引擎中还可以并行加速处理，每个计算节点各自计算本地子 Bitmap，使用 BITOR 操作将这些子 Bitmap 合并成最终的 Bitmap。BITOR 操作比基于 sort 和基于 hash 的去重效率更高，且无条件依赖和数据依赖，可向量化执行。
 
-Roaring Bitmap 实现，细节可以参考：[具体论文和实现](https://github.com/RoaringBitmap/RoaringBitmap)
+Roaring Bitmap 实现，细节可以参考：[具体论文和实现](https://github.com/RoaringBitmap/RoaringBitmap)。
 
 ## 使用 Bitmap 去重
 
 1. Bitmap index 和 Bitmap 去重二者虽然都使用 Bitmap 技术， 但引入动机和解决的问题完全不同。前者用于低基数的枚举型列的等值条件过滤，后者则用于计算一组数据行的指标列的不重复元素的个数。
 2. 从2.3版本开始，所有数据模型的指标列均支持 BITMAP，但是所有模型的排序键还不支持 BITMAP。
-3. 创建表时指定指标列的数据类型为 ·BITMAP， 聚合函数为 BITMAP_UNION。
+3. 创建表时指定指标列的数据类型为 BITMAP， 聚合函数为 BITMAP_UNION。
 4. 当在 Bitmap 类型列上使用 count distinct 时，StarRocks 会自动转化为 BITMAP_UNION_COUNT 计算。
 
 具体操作函数参见 [Bitmap函数](../sql-reference/sql-functions/bitmap-functions/bitmap_and.md)。
@@ -103,7 +103,7 @@ mysql> select page_id, count(distinct visit_users) from page_uv group by page_id
 3. 对新 value 进行编码并插入全局字典。
 4. 对事实表和更新后的全局字典进行 left join，将词典项替换为 ID。
 
-采用这种构建全局字典的方式，可以通过 Spark 或者 MR 实现全局字典的更新，和对事实表中 Value 列的替换。相比基于 Trie 树的全局字典，这种方式可以分布式化，还可以实现全局字典复用。
+采用这种构建全局字典的方式，可以通过 Spark 或者 MapReduce 实现全局字典的更新，和对事实表中 Value 列的替换。相比基于 Trie 树的全局字典，这种方式可以分布式化，还可以实现全局字典复用。
 
 但需要注意的是，使用这种方式构建全局字典时，事实表会被读取多次，并且过程中有两次 Join 操作，会导致计算全局字典使用大量额外资源。
 
@@ -112,11 +112,11 @@ mysql> select page_id, count(distinct visit_users) from page_uv group by page_id
 Trie 树又叫前缀树或字典树。Trie 树中节点的后代存在共同的前缀，系统可以利用字符串的公共前缀来减少查询时间，从而最大限度地减少字符串比较。因此，基于 Trie 树构建全局字典的方式适合用于实现字典编码。但基于 Trie 树的全局字典实现难以分布式化，在数据量比较大的时候会产生性能瓶颈。
 通过构建全局字典，将其他类型的数据转换成为整型数据，就可以利用 Bitmap 对非整型数据列进行精确去重分析了。
 
-## 传统Count_distinct计算
+## 传统 Count distinct 计算
 
 StarRocks 是基于 MPP 架构实现的，在使用 count distinct 做精准去重时，可以保留明细数据，灵活性较高。但是，由于在查询执行的过程中需要进行多次数据 shuffle（不同节点间传输数据，计算去重），会导致性能随着数据量增大而直线下降。
 
-如以下场景所示，存在表（dt, page, user_id)，需要通过明细数据计算 UV。
+如以下场景所示，存在表（dt, page, user_id），需要通过明细数据计算 UV。
 
 |  dt   |   page  | user_id |
 | :---: | :---: | :---:|

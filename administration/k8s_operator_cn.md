@@ -44,7 +44,7 @@ FE 按照数据分布情况和算子类型将执行计划中的计算任务分�
 
 ## 环境准备
 
-- 部署 StarRocks 集群。部署方式请参考[部署 StarRocks](https://docs.starrocks.com/zh-cn/latest/quick_start/Deploy)。
+- 部署 StarRocks 集群。部署方式请参考[部署 StarRocks](../quick_start/Deploy.md)。
 
 - 各个节点的网络互通： FE 能够直接访问 K8s 集群中的 pod，并且 CN 能够访问 BE。
 
@@ -60,11 +60,11 @@ FE 按照数据分布情况和算子类型将执行计划中的计算任务分�
 
 ### 制作 StarRocks  Operator 镜像
 
-1. 下载 StarRocks Operator 代码，并保存至目录 `$your_code_path/``starrocks-kubernetes-operator`。
+1. 下载 StarRocks Operator 代码，并保存至目录 `$your_code_path/starrocks-kubernetes-operator`。
 
     ```Bash
     cd $your_code_path
-    git clone https://github.com/StarRocks/starrocks-kubernetes-operator
+    git clone https://github.com/StarRocks/starrocks-kubernetes-operator.git
     ```
 
 2. 进入 StarRocks Operator 代码目录。
@@ -101,7 +101,7 @@ FE 按照数据分布情况和算子类型将执行计划中的计算任务分�
 1. 下载 StarRocks 的 Github 仓库代码。
 
     ```Bash
-    git clone https://github.com/StarRocks/starrocks
+    git clone https://github.com/StarRocks/starrocks.git
     ```
 
 2. 进入 **docker** 目录。
@@ -144,7 +144,7 @@ CN 辅助服务是指 **component** 目录下的register、offline，会将 CN �
 
 ## 部署 StarRocks Operator
 
-1. 进入 **starrocks-kubernetes-operator****/deploy** 目录。
+1. 进入 **starrocks-kubernetes-operator/deploy** 目录。
 
     ```Bash
     cd $your_code_path/starrocks-kubernetes-operator/deploy
@@ -294,7 +294,7 @@ CN 部署成功后， StarRocks Operator 自动调用 **cn.yaml** 文件中配�
 - 问题：如果 `reason` 显示 `unhealthy`，则表示 HTTP 健康检查失败。
   ![image](../assets/9.4.png)
 
-- 解决方式：参考[部署CN ](/部署 CN)，检查 **cn.yaml** 文件中的 FE 节点 IP 地址和 FE 的查询端口号。
+- 解决方式：参考[在 K8s 中部署 CN](#在-k8s-中部署-cn)，检查 **cn.yaml** 文件中的 FE 节点 IP 地址和 FE 的查询端口号。
 
   ![image](../assets/9.5.png)
 

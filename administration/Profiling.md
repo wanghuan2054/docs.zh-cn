@@ -80,7 +80,7 @@ StarRocks 支持四种数据模型：主键模型 (PRIMARY KEY)，聚合模型 (
         state tinyint NOT NULL
     )
     PRIMARY KEY (dt, order_id)
-    DISTRIBUTED BY HASH(order_id) BUCKETS 4
+    DISTRIBUTED BY HASH(order_id) BUCKETS 4;
     ```
 
 ### 使用内存表
@@ -154,7 +154,7 @@ RANGE 分区用于将数据划分成不同区间，逻辑上等同于将原始�
 HASH 分桶指根据 Hash 值将数据划分成不同的 Bucket。
 
 * 建议采用区分度大的列做分桶，避免出现数据倾斜。
-* 为方便数据恢复，建议单个 Bucket 保持较小的 Size，应保证其中数据压缩后大小保持在 100M 至 1GB 左右。建议您在建表或增加分区时合理考虑 Bucket 数目，其中不同分区可指定不同的 Bucket 数量。
+* 为方便数据恢复，建议单个 Bucket 保持较小的 Size，应保证其中数据压缩后大小保持在 100MB 至 1GB 左右。建议您在建表或增加分区时合理考虑 Bucket 数目，其中不同分区可指定不同的 Bucket 数量。
 * 不建议采用 Random 分桶方式。建表时，请指定明确的 Hash 分桶列。
 
 ### 使用稀疏索引和 Bloomfilter
@@ -175,7 +175,7 @@ StarRocks 支持倒排索引，采用位图技术构建索引（Bitmap Index）�
 
 ### 使用物化视图
 
-物化视图（Rollup）本质上可以理解为原始表（Base table）的一个物化索引。建立物化视图时，您可以只选取 Base table 中的部分列作为 schema，schema 中的字段顺序也可与Base table 不同。下列情形可以考虑建立物化视图：
+物化视图（Rollup）本质上可以理解为原始表（Base table）的一个物化索引。建立物化视图时，您可以只选取 Base table 中的部分列作为 schema，schema 中的字段顺序也可与 Base table 不同。下列情形可以考虑建立物化视图：
 
 * Base table 中数据聚合度不高。这通常是因为 Base table 有区分度比较大的字段而导致。此时，您可以考虑选取部分列，建立物化视图。对于上述 `site_visit` 表，`siteid` 可能导致数据聚合度不高。如果有经常根据城市统计 `pv` 需求，可以建立一个只有 `city`，`pv` 的物化视图。
 

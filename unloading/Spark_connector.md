@@ -69,7 +69,7 @@ Spark 连接器支持三种数据读取方式：临时视图、Spark DataFrame �
 | starrocks.request.read.timeout.ms    | 30000             | 向 StarRocks 发送请求的读取超时时间。                        |
 | starrocks.request.query.timeout.s    | 3600              | 从 StarRocks 查询数据的超时时间。默认超时时间为 1 小时。`-1` 表示无超时限制。 |
 | starrocks.request.tablet.size        | Integer.MAX_VALUE | 一个 Spark RDD 分区对应的 StarRocks Tablet 的个数。参数设置越小，生成的分区越多，Spark 侧的并行度也就越大，但与此同时会给 StarRocks 侧造成更大的压力。 |
-| starrocks.batch.size                 | 1024              | 单次从 BE 读取的最大行数。调大参数取值可减少 Spark 与 StarRocks 之间建立连接的次数，从而减轻网络延迟所带来的的额外时间开销。 |
+| starrocks.batch.size                 | 4096              | 单次从 BE 读取的最大行数。调大参数取值可减少 Spark 与 StarRocks 之间建立连接的次数，从而减轻网络延迟所带来的的额外时间开销。对于StarRocks 2.2及以后版本最小支持的batch size为4096，如果配置小于该值，则按4096处理 |
 | starrocks.exec.mem.limit             | 2147483648        | 单个查询的内存限制。单位：字节。默认内存限制为 2 GB。        |
 | starrocks.deserialize.arrow.async    | false             | 是否支持把 Arrow 格式异步转换为 Spark 连接器迭代所需的 RowBatch。 |
 | starrocks.deserialize.queue.size     | 64                | 异步转换 Arrow 格式的内部处理队列，当 `starrocks.deserialize.arrow.async` 为 `true` 时生效。 |
@@ -426,7 +426,7 @@ Spark 连接器中，将 DATE 和 DATETIME 数据类型映射为 STRING 数据�
    ```Scala
    scala>  val df = spark.read.format("starrocks")
            .option("starrocks.table.identifier", s"test.mytable")
-           .option("starrocks.fenodes", s"<fe_host>:<fe_http_port")
+           .option("starrocks.fenodes", s"<fe_host>:<fe_http_port>")
            .option("user", s"root")
            .option("password", s"")
            .load()
@@ -693,7 +693,7 @@ Spark 连接器中，将 DATE 和 DATETIME 数据类型映射为 STRING 数据�
 4. 在 StarRocks 数据库下，开启 Profile 上报:
 
    ```SQL
-   MySQL [test]> SET is_report_success = true;
+   MySQL [test]> SET enable_profile = true;
    Query OK, 0 rows affected (0.00 sec)
    ```
 

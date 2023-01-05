@@ -6,7 +6,9 @@ StarRocks 支持在导入数据的过程中实现数据转换。
 
 本文以 CSV 格式的数据文件为例介绍如何在导入过程中实现数据转换。具体支持哪些格式的数据文件的转换，跟您选择的导入方式有关。
 
-> 说明：对于 CSV 格式的数据，StarRocks 支持设置长度最大不超过 50 个字节的 UTF-8 编码字符串作为列分隔符，包括常见的逗号 (,)、Tab 和 Pipe (|)。
+> **说明**
+>
+> 对于 CSV 格式的数据，StarRocks 支持设置长度最大不超过 50 个字节的 UTF-8 编码字符串作为列分隔符，包括常见的逗号 (,)、Tab 和 Pipe (|)。
 
 ## 应用场景
 
@@ -30,7 +32,11 @@ StarRocks 支持在导入数据的过程中实现数据转换。
 
 ## 前提条件
 
-如果使用 Broker Load 导入数据，必须确保您的 StarRocks 集群中已部署 Broker。您可以通过 [SHOW BROKER](/sql-reference/sql-statements/Administration/SHOW%20BROKER.md) 语句来查看集群中已经部署的 Broker。如果集群中没有部署 Broker，请参见[部署 Broker 节点](/administration/deploy_broker.md)完成 Broker 部署。本文假设您已部署一个名为 `broker1` 的 Broker。
+### Broker Load
+
+参见[从 HDFS 或外部云存储系统导入数据](../loading/BrokerLoad.md)中的“背景信息”小节。
+
+### Routine Load
 
 如果使用 Routine Load 导入数据，必须确保您的 Apache Kafka® 集群已创建 Topic。本文假设您已部署两个 Topic，分别为 `topic1` 和 `topic2`。
 
@@ -94,7 +100,9 @@ StarRocks 支持在导入数据的过程中实现数据转换。
 - 本地文件系统
 
 - HDFS 和外部云存储系统
-  > 说明：这里以 HDFS 为例进行介绍。
+  > **说明**
+  >
+  > 这里以 HDFS 为例进行介绍。
 
 - Kafka
 
@@ -122,7 +130,9 @@ curl --location-trusted -u root: \
     http://<fe_host>:<fe_http_port>/api/test_db/table1/_stream_load
 ```
 
-> 说明：`columns` 参数用于对数据文件中的列进行临时命名，从而映射到 StarRocks 表的列。
+> **说明**
+>
+> `columns` 参数用于对数据文件中的列进行临时命名，从而映射到 StarRocks 表的列。
 
 有关详细的语法和参数介绍，请参见 [STREAM LOAD](/sql-reference/sql-statements/data-manipulation/STREAM%20LOAD.md)。
 
@@ -139,10 +149,12 @@ LOAD LABEL test_db.label1
     COLUMNS TERMINATED BY ","
     (user_id, user_gender, event_date, event_type)
 )
-WITH BROKER "broker1";
+WITH BROKER
 ```
 
-> 说明：`column_list` 参数用于对数据文件中的列进行临时命名，从而映射到 StarRocks 表的列。
+> **说明**
+>
+> `column_list` 参数用于对数据文件中的列进行临时命名，从而映射到 StarRocks 表的列。
 
 有关详细的语法和参数介绍，请参见 [BROKER LOAD](/sql-reference/sql-statements/data-manipulation/BROKER%20LOAD.md)。
 
@@ -162,7 +174,9 @@ FROM KAFKA
 );
 ```
 
-> 说明：`COLUMNS` 参数用于对数据中的列进行临时命名，从而映射到 StarRocks 表的列。
+> **说明**
+>
+> `COLUMNS` 参数用于对数据中的列进行临时命名，从而映射到 StarRocks 表的列。
 
 有关详细的语法和参数介绍，请参见 [CREATE ROUTINE LOAD](/sql-reference/sql-statements/data-manipulation/ROUTINE%20LOAD.md)。
 
@@ -192,7 +206,9 @@ MySQL [test_db]> SELECT * FROM table1;
 - 本地文件系统
 
 - HDFS 和外部云存储系统
-  > 说明：这里以 HDFS 为例进行介绍。
+  > **说明**
+  >
+  > 这里以 HDFS 为例进行介绍。
 
 - Kafka
 
@@ -229,7 +245,7 @@ LOAD LABEL test_db.label2
     (user_id, user_gender, event_date, event_type)
     WHERE event_type = 1
 )
-WITH BROKER "broker1";
+WITH BROKER
 ```
 
 有关详细的语法和参数介绍，请参见 [BROKER LOAD](/sql-reference/sql-statements/data-manipulation/BROKER%20LOAD.md)。
@@ -277,7 +293,9 @@ MySQL [test_db]> SELECT * FROM table1;
 - 本地文件系统
 
 - HDFS 和外部云存储系统
-  > 说明：这里以 HDFS 为例进行介绍。
+  > **说明**
+  >
+  > 这里以 HDFS 为例进行介绍。
 
 - Kafka
 
@@ -297,7 +315,7 @@ curl --location-trusted -u root: \
     http://<fe_host>:<fe_http_port>/api/test_db/table2/_stream_load
 ```
 
-> 说明：
+> **说明**
 >
 > - 必须通过 `columns` 参数先声明待导入数据文件中包含的**所有列**，然后再声明衍生列。如上述示例中，`columns` 参数中先声明 `file2.csv` 文件中包含的仅有的一列临时命名为 `date`，然后再声明需要调用函数经过转化才能生成的衍生列：`year=year(date)`、`month=month(date)` 和 `day=day(date)`。
 >
@@ -319,10 +337,12 @@ LOAD LABEL test_db.label3
     (date)
     SET(year=year(date), month=month(date), day=day(date))
 )
-WITH BROKER "broker1";
+WITH BROKER
 ```
 
-> 说明：必须先通过 `column_list` 参数声明待导入数据文件中包含的所有列，然后再通过 SET 子句声明衍生列。如上述示例中，先通过 `column_list` 参数声明 `file2.csv` 文件中包含的仅有的一列临时命名为 `date`，然后再通过 SET 子句声明需要调用函数经过转化才能生成的衍生列：`year=year(date)`、`month=month(date)` 和 `day=day(date)`。
+> **说明**
+>
+> 必须先通过 `column_list` 参数声明待导入数据文件中包含的所有列，然后再通过 SET 子句声明衍生列。如上述示例中，先通过 `column_list` 参数声明 `file2.csv` 文件中包含的仅有的一列临时命名为 `date`，然后再通过 SET 子句声明需要调用函数经过转化才能生成的衍生列：`year=year(date)`、`month=month(date)` 和 `day=day(date)`。
 
 有关详细的语法和参数介绍，请参见 [BROKER LOAD](/sql-reference/sql-statements/data-manipulation/BROKER%20LOAD.md)。
 
@@ -342,7 +362,9 @@ FROM KAFKA
 );
 ```
 
-> 说明：必须通过 `COLUMNS` 参数先声明待导入数据文件中包含的所有列，然后再声明衍生列。如上述示例中，`COLUMNS` 参数中先声明 `file2.csv` 文件中包含的仅有的一列临时命名为 `date`，然后再声明需要调用函数经过转化才能生成的衍生列：`year=year(date)`、`month=month(date)` 和 `day=day(date)`。
+> **说明**
+>
+> 必须通过 `COLUMNS` 参数先声明待导入数据文件中包含的所有列，然后再声明衍生列。如上述示例中，`COLUMNS` 参数中先声明 `file2.csv` 文件中包含的仅有的一列临时命名为 `date`，然后再声明需要调用函数经过转化才能生成的衍生列：`year=year(date)`、`month=month(date)` 和 `day=day(date)`。
 
 有关详细的语法和参数介绍，请参见 [CREATE ROUTINE LOAD](/sql-reference/sql-statements/data-manipulation/ROUTINE%20LOAD.md)。
 
@@ -395,10 +417,12 @@ LOAD LABEL test_db.label4
     COLUMNS FROM PATH AS (date)
     SET(event_date = date)
 )
-WITH BROKER "broker1";
+WITH BROKER
 ```
 
-> 说明：上述示例中，指定的文件路径中的分区字段 `date` 对应 `table1` 表中的 `event_date` 列，因此需要通过 SET 子句完成 `date` 到 `event_date` 的映射。如果指定的文件路径中的分区字段与其对应的 StarRocks 表中的列名称一样，则不需要通过 SET 子句来指定映射关系。
+> **说明**
+>
+> 上述示例中，指定的文件路径中的分区字段 `date` 对应 `table1` 表中的 `event_date` 列，因此需要通过 SET 子句完成 `date` 到 `event_date` 的映射。如果指定的文件路径中的分区字段与其对应的 StarRocks 表中的列名称一样，则不需要通过 SET 子句来指定映射关系。
 
 有关详细的语法和参数介绍，请参见 [BROKER LOAD](/sql-reference/sql-statements/data-manipulation/BROKER%20LOAD.md)。
 

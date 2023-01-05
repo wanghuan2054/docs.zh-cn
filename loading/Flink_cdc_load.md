@@ -1,13 +1,14 @@
 # 从 MySQL 实时同步
 
-本文介绍如何将 MySQL 的数据实时同步（秒级）至 StarRocks，支撑企业实时分析和处理海量数据的需求。
+本文介绍如何将 MySQL 的数据实时（秒级）同步至 StarRocks，支撑企业实时分析和处理海量数据的需求。
 
 ## 基本原理
 
 ![MySQL 同步](../assets/4.9.2.png)
 
-实时同步 MySQL 至 StarRocks 分成同步库表结构、同步数据两个阶段进行。首先 StarRocks Migration Tool (数据迁移工具，以下简称 SMT) 简化待同步库表的创建。然后 Flink 集群运行 Flink job，同步 MySQL 全量及增量数据至 StarRocks。具体同步流程如下：
+实时同步 MySQL 至 StarRocks 分成同步库表结构、同步数据两个阶段进行。首先 StarRocks Migration Tool (数据迁移工具，以下简称 SMT) 将 MySQL 的库表结构转化成 StarRocks 的建库和建表语句。然后 Flink 集群运行 Flink job，同步 MySQL 全量及增量数据至 StarRocks。具体同步流程如下：
 
+> 说明：
 > MySQL 实时同步至 StarRocks 能够保证端到端的 exactly-once 的语义一致性。
 
 1. **同步库表结构**
@@ -18,7 +19,7 @@
 
    Flink SQL 客户端执行导入数据的 SQL 语句（`INSERT INTO SELECT`语句），向 Flink 集群提交一个或者多个长时间运行的 Flink job。Flink集群运行 Flink job ，[Flink cdc connector](https://ververica.github.io/flink-cdc-connectors/master/content/快速上手/build-real-time-data-lake-tutorial-zh.html) 先读取数据库的历史全量数据，然后无缝切换到增量读取，并且发给 flink-starrocks-connector，最后  flink-starrocks-connector  攒微批数据同步至 StarRocks。
 
-   > 注意：
+   > **注意**
    >
    > 仅支持同步 DML，不支持同步 DDL。
 
@@ -74,7 +75,7 @@
 2. **下载 [Flink CDC connector](https://github.com/ververica/flink-cdc-connectors/releases)**。本示例的数据源为 MySQL，因此下载 flink-sql-connector-**mysql**-cdc-x.x.x.jar。并且版本需支持对应的 Flink 版本，两者版本支持度，请参见 [Supported Flink Versions](https://ververica.github.io/flink-cdc-connectors/release-2.2/content/about.html#supported-flink-versions)。由于本文使用 Flink  1.14.5，因此可以使用 flink-sql-connector-mysql-cdc-2.2.0.jar。
 
       ```Bash
-      wget https://repo1.maven.org/maven2/com/ververica/flink-sql-connector-mysql-cdc/2.1.1/flink-sql-connector-mysql-cdc-2.2.0.jar
+      wget https://repo1.maven.org/maven2/com/ververica/flink-sql-connector-mysql-cdc/2.2.0/flink-sql-connector-mysql-cdc-2.2.0.jar
       ```
 
 3. **下载 [flink-connector-starrocks](https://search.maven.org/artifact/com.starrocks/flink-connector-starrocks)**，并且其版本需要对应 Flink 的版本。
@@ -85,32 +86,36 @@
       >
       > - 第二个版本号 y.yy 为其支持的 Flink 版本号。
       >
-      > - 第三个版本号 z.zz 为 Flink 支持的 Scala 版本号。如果 Flink 为 1.14 以及之前版本，则需要传入。
+      > - 第三个版本号 z.zz 为 Flink 支持的 Scala 版本号。如果 Flink 为 1.14.x 以及之前版本，则需要下载带有 Scala 版本号的 flink-connector-starrocks。
 
    由于本文使用 Flink 版本号 1.14.5，Scala 版本号 2.11，因此可以下载 flink-connector-starrocks JAR 包 **1.2.3_flink-1.14_2.11.jar**。
 
 4. 将 Flink CDC connector、Flink-connector-starrocks 的 JAR 包 **flink-sql-connector-mysql-cdc-2.2.0.jar**、**1.2.3_flink-1.14_2.11.jar** 移动至 Flink 的 **lib** 目录。
 
-   > **注意**：
+   > **注意**
    >
-   > 如果 Flink 已经处于运行状态中，则需要重启 Flink ，加载并生效 JAR 包。
+   > 如果 Flink 已经处于运行状态中，则需要先停止 Flink，然后重启 Flink ，以加载并生效 JAR 包。
    >
    > ```Bash
-   > $ ./bin/stop-cluster.sh
-   > $ ./bin/start-cluster.sh
+   > ./bin/stop-cluster.sh
+   > ./bin/start-cluster.sh
    > ```
 
-5. 下载并解压 [SMT](https://www.starrocks.com/zh-CN/download/community)，并将放在 **flink-1.14.5** 目录下。
+5. 下载并解压 [SMT](https://www.mirrorship.cn/zh-CN/download/community)，并将其放在 **flink-1.14.5** 目录下。您可以根据操作系统和 CPU 架构选择对应的 SMT 安装包。
 
    ```Bash
+   ## 适用于 Linux x86
    wget https://cdn-thirdparty.starrocks.com/smt.tar.gz
+   ## 适用于 macOS ARM64
+   wget https://cdn-thirdparty.starrocks.com/smt_darwin_arm64.tar.gz
+  
    ```
 
-### 开启 MySQL  Binlog 日志
+### 开启 MySQL Binlog 日志
 
 您需要确保已经开启 MySQL Binlog 日志，实时同步时需要读取 MySQL Binlog 日志数据，解析并同步至 StarRocks。
 
-1. 编辑 MySQL 配置文件 **my.cnf**（默认路径为 **/etc/my.cnf**），开启 MySQL Binlog。
+1. 编辑 MySQL 配置文件 **my.cnf**（默认路径为 **/etc/my.cnf**），以开启 MySQL Binlog。
 
    ```Bash
    # 开启 Binlog 日志
@@ -214,6 +219,13 @@
         - `output_dir` ：待生成的 SQL 文件的路径。SQL 文件会用于在 StarRocks 集群创建库表， 向 Flink 集群提交 Flink job。默认为 `./result`，不建议修改。
 
 2. 执行如下命令，SMT 会读取 MySQL 中同步对象的库表结构，并且结合配置文件信息，在 **result** 目录生成 SQL 文件，用于  StarRocks 集群创建库表（**starrocks-create.all.sql**）， 用于向 Flink 集群提交同步数据的 flink job（**flink-create.all.sql**）。
+   并且源表不同，则 **starrocks-create.all.sql** 中建表语句默认创建的数据模型不同。
+
+   - 如果源表没有 Primary Key、 Unique Key，则默认创建明细模型。
+   - 如果源表有 Primary Key、 Unique Key，则区分以下几种情况：
+      - 源表是 Hive 表、ClickHouse MergeTree 表，则默认创建明细模型。
+      - 源表是 ClickHouse SummingMergeTree表，则默认创建聚合模型。
+      - 源表为其他类型，则默认创建主键模型。
 
     ```Bash
     # 运行 SMT
@@ -226,11 +238,12 @@
     flink-create.all.sql  starrocks-create.1.sql
     ```
 
-3. 如下命令，连接 StarRocks，并执行 SQL 文件 **starrocks-create.all.sql**，用于创建目标库和表。推荐使用 SQL 文件中默认的建表语句，基于[主键模型](../table_design/Data_model.md#主键模型)创建目标表。
+3. 执行如下命令，连接 StarRocks，并执行 SQL 文件 **starrocks-create.all.sql**，用于创建目标库和表。推荐使用 SQL 文件中默认的建表语句，本示例中建表语句默认创建的数据模型为[主键模型](../table_design/Data_model.md#主键模型)。
 
     > **注意**
     >
-    > 您也可以根据业务需要，修改 SQL 文件中的建表语句，基于[非主键模型](../table_design/Data_model.md#主键模型)创建目标表。但是源 MySQL 中的 DELETE 操作无法同步至非主键模型，请谨慎使用。
+    > - 您也可以根据业务需要，修改 SQL 文件中的建表语句，基于[其他模型](../table_design/Data_model.md)创建目标表。
+    > - 如果您选择基于非主键模型创建目标表，StarRocks 不支持将源表中 DELETE 操作同步至非主键模型的表，请谨慎使用。
 
     ```Bash
     mysql -h <fe_host> -P <fe_query_port> -u user2 -pxxxxxx < starrocks-create.all.sql
@@ -265,7 +278,7 @@
     ./bin/sql-client.sh -f flink-create.all.sql
     ```
 
-    > 注意：
+    > **注意**
     >
     > - 需要确保 Flink 集群已经启动。可通过命令 `flink/bin/start-cluster.sh` 启动。
     >
@@ -342,9 +355,13 @@
    Job ID: 5ae005c4b3425d8bb13fe660260a35da
    ```
 
-   如果您只需要同步部分数据，例如支付时间在2021年12月21日之后的数据，则可以在 `INSERT INTO SELECT` 语句中使用 `WHERE` 子句设置过滤条件，例如  `WHERE pay_dt >'2021-12-21'`。不满足该条件的数据，即支付时间在2021年12月21日或者之前的数据不会同步至StarRocks。
+   如果您只需要同步部分数据，例如支付时间在 2021 年 01 月 01 日之后的数据，则可以在 INSERT INTO SELECT 语句中使用 WHERE order_date >'2021-01-01' 设置过滤条件。不满足该条件的数据，即支付时间在 2021 年 01 月 01 日或者之前的数据不会同步至 StarRocks。
 
-2. 如果返回如下结果，则表示 Flink job 已经提交，开始同步全量和增量数据。
+   ```sql
+   INSERT INTO `default_catalog`.`demo`.`orders_sink` SELECT product_id,product_name, COUNT(*) AS cnt FROM `default_catalog`.`demo`.`orders_src` WHERE order_date >'2021-01-01 00:00:01' GROUP BY product_id,product_name;
+   ```
+
+   如果返回如下结果，则表示 Flink job 已经提交，开始同步全量和增量数据。
 
    ```SQL
    [INFO] Submitting SQL update statement to the cluster...
@@ -352,7 +369,7 @@
    Job ID: 5ae005c4b3425d8bb13fe660260a35da
    ```
 
-3. 可以通过 [Flink WebUI](https://nightlies.apache.org/flink/flink-docs-master/docs/try-flink/flink-operations-playground/#flink-webui) 或者在 Flink 命令行执行命令`bin/flink list -running`，查看 Flink 集群中正在运行的 Flink job，以及 Flink job ID。
+2. 可以通过 [Flink WebUI](https://nightlies.apache.org/flink/flink-docs-master/docs/try-flink/flink-operations-playground/#flink-webui) 或者在 Flink 命令行执行命令`bin/flink list -running`，查看 Flink 集群中正在运行的 Flink job，以及 Flink job ID。
       1. Flink WebUI 界面
          ![task 拓扑](../assets/4.9.3.png)
 
@@ -370,7 +387,7 @@
            >
            > 如果任务出现异常，可以通过 Flink WebUI 或者  **flink-1.14.5/log** 目录的日志文件进行排查。
 
-## 补充说明
+## 常见问题
 
 ### **如何为不同的表设置不同的 flink-connector-starrocks 配置**
 
@@ -464,21 +481,21 @@ flink.starrocks.sink.properties.strip_outer_array=true
 
 > **注意**
 >
-> 该方式会对导入性能有一定的影响。
+> 该方式会对导入速度有一定的影响。
 
 ### 多个的 INSERT INTO 语句合并为一个 Flink job
 
-1. 在 **flink-create.all.sql** 文件使用 [STATEMENT SET](https://nightlies.apache.org/flink/flink-docs-master/docs/dev/table/sqlclient/#execute-a-set-of-sql-statements) 语句，将多个的 INSERT INTO 语句合并为一个 Flink job，避免占用过多的 Flink job 资源。
+在 **flink-create.all.sql** 文件使用 [STATEMENT SET](https://nightlies.apache.org/flink/flink-docs-master/docs/dev/table/sqlclient/#execute-a-set-of-sql-statements) 语句，将多个的 INSERT INTO 语句合并为一个 Flink job，避免占用过多的 Flink job 资源。
 
    > 说明
    >
    > Flink 自 1.13 起 支持  [STATEMENT SET](https://nightlies.apache.org/flink/flink-docs-master/docs/dev/table/sqlclient/#execute-a-set-of-sql-statements) 语法。
 
-2. 打开 **result/flink-create.all.sql** 文件。
+1. 打开 **result/flink-create.all.sql** 文件。
 
-3. 修改文件中的 SQL 语句，将所有的  INSERT INTO 语句调整位置到文件末尾。然后在第一条 INSERT语句的前面加上`EXECUTE STATEMENT SET BEGIN;` 在最后一 INSERT 语句后面加上一行`END;`。
+2. 修改文件中的 SQL 语句，将所有的  INSERT INTO 语句调整位置到文件末尾。然后在第一条 INSERT语句的前面加上`EXECUTE STATEMENT SET BEGIN` 在最后一 INSERT 语句后面加上一行`END;`。
 
-   > 注意：
+   > **注意**
    >
    > CREATE DATABASE、CREATE TABLE  的位置保持不变。
 
@@ -496,6 +513,4 @@ flink.starrocks.sink.properties.strip_outer_array=true
    END;
    ```
 
-## 常见问题
-
-请参见 [MySQL 实时同步至 StarRocks 常见问题](../faq/loading/synchronize_mysql_faq.md)。
+更多常见问题，请参见 [MySQL 实时同步至 StarRocks 常见问题](../faq/loading/synchronize_mysql_into_sr.md)。

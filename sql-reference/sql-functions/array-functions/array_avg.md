@@ -10,6 +10,10 @@
 array_avg(array(type))
 ```
 
+## 参数说明
+
+`array(type)` 中的 `type` 支持如下类型：BOOLEAN、TINYINT、SMALLINT、INT、BIGINT、LARGEINT、FLOAT、DOUBLE、DECIMALV2。
+
 ## 示例
 
 ```plain text

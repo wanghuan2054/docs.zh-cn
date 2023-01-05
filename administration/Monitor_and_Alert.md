@@ -2,7 +2,7 @@
 
 本文介绍如何为 StarRocks 设置监控报警。
 
-StarRocks 提供两种监控报警的方案。企业版用户可以使用内置的 StarRocksManager，其自带的 Agent 从各个 Host 采集监控信息，上报至 Center Service，然后做可视化展示。StarRocksManager 提供邮件和 Webhook 的方式发送报警通知。如果您有二次开发需求，需要自行搭建部署监控服务，也可以使用开源 Prometheus+Grafana 方案，StarRocks 提供了兼容 Prometheus 的信息采集接口，可以通过直接链接 BE 或 FE 的 HTTP 端口来获取集群的监控信息。
+StarRocks 提供两种监控报警的方案。企业版用户可以使用内置的 StarRocksManager，其自带的 Agent 从各个 Host 采集监控信息，上报至 Center Service，然后做可视化展示。StarRocksManager 提供邮件和 Webhook 的方式发送报警通知。如果您有二次开发需求，需要自行搭建部署监控服务，也可以使用开源 Prometheus+Grafana 方案，StarRocks 提供了兼容 Prometheus 的信息采集接口，可以通过直接连接 BE 或 FE 的 HTTP 端口来获取集群的监控信息。
 
 ## 使用 StarRocksManager
 
@@ -13,7 +13,7 @@ StarRocksManager 的监控可以分成 **集群** 和 **节点** 两个维度。
 * 集群性能监控
   * CPU 使用率
   * 内存使用
-  * 磁盘I/O使用率，磁盘使用量、磁盘空闲量
+  * 磁盘 I/O 使用率，磁盘使用量、磁盘空闲量
   * 发包带宽、收包带宽，发包数、收包数
 * 集群查询监控
   * QPS
@@ -29,7 +29,7 @@ StarRocksManager 的监控可以分成 **集群** 和 **节点** 两个维度。
   * 增量合并数据组速率
   * 增量合并数据量
 
-在**节点**页面可以看到所有BE/FE的机器列表和状态等基础信息
+在**节点**页面可以看到所有 BE/FE 的机器列表和状态等基础信息。
 
 ![8.10.1-1](../assets/8.10.1-1.png)
 
@@ -39,7 +39,7 @@ StarRocksManager 的监控可以分成 **集群** 和 **节点** 两个维度。
 
 ## 使用 Prometheus+Grafana
 
-您可以使用 [Prometheus](https://prometheus.io/) 作为 StarRocks 监控数据存储方案，并使用[Grafana](https://grafana.com/) 作为可视化组件。
+您可以使用 [Prometheus](https://prometheus.io/) 作为 StarRocks 监控数据存储方案，并使用 [Grafana](https://grafana.com/) 作为可视化组件。
 
 Prometheus 是一个拥有多维度数据模型的、灵活的查询语句的时序数据库。它可以通过 Pull 或 Push 采集被监控系统的监控项，存入自身的时序数据库中。并且通过丰富的多维数据查询语言，满足用户的不同需求。
 
@@ -107,7 +107,7 @@ scrape_configs:
 
 #### 启动 Prometheus
 
-通过一下命令启动 Prometheus。
+通过以下命令启动 Prometheus。
 
 ```bash
 nohup ./prometheus \
@@ -151,7 +151,7 @@ wget https://dl.grafana.com/oss/release/grafana-8.0.6.linux-amd64.tar.gz
 tar -zxf grafana-8.0.6.linux-amd64.tar.gz
 ```
 
-#### 配置 Prometheus
+#### 配置 Grafana
 
 在 **./conf/defaults.ini** 中添加相关的配置。
 
@@ -275,10 +275,10 @@ Grafana 中，Row 代表一组图表的集合。如上图中的 Overview、Clust
 |be_bytes_written_per_second|bytes/s|平均值|BE 写入速度。|
 |be_base_compaction_bytes_per_second|bytes/s|平均值|BE 的基线合并速率。|
 |be_cumulative_compaction_bytes_per_second|bytes/s|平均值|BE 的增量合并速率。|
-|be_base_compaction_rowsets_per_second|rowsets/s|平均值|BE的基线合并 rowsets 合并速率。|
-|be_cumulative_compaction_rowsets_per_second|rowsets/s|平均值|BE的增量合并 rowsets 合并速率。|
+|be_base_compaction_rowsets_per_second|rowsets/s|平均值|BE 的基线合并 rowsets 合并速率。|
+|be_cumulative_compaction_rowsets_per_second|rowsets/s|平均值|BE 的增量合并 rowsets 合并速率。|
 |be_base_compaction_failed|个/秒|平均值|BE 基线合并失败。|
-|be_clone_failed|个/秒|平均值|BE克隆失败|
+|be_clone_failed|个/秒|平均值|BE 克隆失败|
 |be_create_rollup_failed|个/秒|平均值|BE 创建物化视图失败。|
 |be_create_tablet_failed|个/秒|平均值|BE 创建 tablet 失败。|
 |be_cumulative_compaction_failed|个/秒|平均值|BE 增量合并失败。|
@@ -349,7 +349,7 @@ Grafana 中，Row 代表一组图表的集合。如上图中的 Overview、Clust
 |cpu_softirq| 百分比|平均值|cpu_softirq 使用率。|
 |cpu_steal| 百分比|平均值|cpu_steal 使用率。|
 |disk_free|bytes|平均值|空闲磁盘容量。|
-|disk_io_svctm|Ms|平均值|磁盘IO服务时间。|
+|disk_io_svctm|Ms|平均值|磁盘 IO 服务时间。|
 |disk_io_util|百分比|平均值|磁盘使用率。|
 |disk_used|bytes|平均值|已用磁盘容量。|
 |starrocks_fe_query_resource_group|个|累计值|该资源组中查询任务的数量|

@@ -44,7 +44,7 @@ SET GLOBAL exec_mem_limit = 137438953472;
 * disable_streaming_preaggregations
 * exec_mem_limit
 * force_streaming_aggregate
-* is_report_success
+* enable_profile
 * hash_join_push_down_right_table
 * parallel_fragment_exec_instance_num
 * parallel_exchange_instance_num
@@ -72,7 +72,7 @@ SET forward_to_master = concat('tr', 'u', 'e');
 
 ### 在查询语句中设置变量
 
-在一些场景中，我们可能需要对某些查询专门设置变量。通过使用SET_VAR提示可以在查询中设置仅在单个语句内生效的会话变量。举例：
+在一些场景中，我们可能需要对某些查询专门设置变量。通过使用 SET_VAR 提示可以在查询中设置仅在单个语句内生效的会话变量。举例：
 
 ```sql
 SELECT /*+ SET_VAR(exec_mem_limit = 8589934592) */ name FROM people ORDER BY name;
@@ -80,7 +80,10 @@ SELECT /*+ SET_VAR(exec_mem_limit = 8589934592) */ name FROM people ORDER BY nam
 SELECT /*+ SET_VAR(query_timeout = 1) */ sleep(3);
 ```
 
-> 注：提示必须以"/*+"开头，并且只能跟随在 SELECT 关键字之后。
+> **注意**
+>
+> 1. `SET_VAR` 提示仅支持 MySQL 8.0 之后的版本。
+> 2. 提示必须以 "/*+" 开头，并且只能跟在 SELECT 关键字之后。
 
 ## 支持的变量
 
@@ -108,6 +111,13 @@ SELECT /*+ SET_VAR(query_timeout = 1) */ sleep(3);
 
   控制是否启用 Colocate Join 功能。默认为 false，表示启用该功能。true 表示禁用该功能。当该功能被禁用后，查询规划将不会尝试执行 Colocate Join。
 
+* streaming_preaggregation_mode
+  
+  用于设置多阶段聚合时，group-by 第一阶段的预聚合方式。如果第一阶段本地预聚合效果不好，则可以关闭预聚合，走流式方式，把数据简单序列化之后发出去。取值含义如下：
+  * `auto`：先探索本地预聚合，如果预聚合效果好，则进行本地预聚合；否则切换成流式。默认值，建议保留。
+  * `force_preaggregation`: 不进行探索，直接进行本地预聚合.
+  * `force_streaming`: 不进行探索，直接做流式.
+
 * disable_streaming_preaggregations
 
   控制是否开启流式预聚合。默认为 false，即开启。
@@ -119,6 +129,14 @@ SELECT /*+ SET_VAR(query_timeout = 1) */ sleep(3);
 * enable_insert_strict
 
   用于设置通过 INSERT 语句进行数据导入时，是否开启 strict 模式。默认为 true，即开启 strict 模式。关于该模式的介绍，可以参阅[数据导入](../loading/Loading_intro.md)章节。
+
+* enable_materialized_view_union_rewrite
+
+  是否开启物化视图 Union 改写。默认值：`true`。
+
+* enable_rule_based_materialized_view_rewrite
+
+  是否开启基于规则的物化视图查询改写功能，主要用于处理单表查询改写。默认值：`true`。
 
 * enable_spilling
 
@@ -144,7 +162,7 @@ SELECT /*+ SET_VAR(query_timeout = 1) */ sleep(3);
 
 * force_streaming_aggregate
 
-  用于控制聚合节点是否启用流式聚合计算策略。默认为false，表示不启用该策略。
+  用于控制聚合节点是否启用流式聚合计算策略。默认为 false，表示不启用该策略。
 
 * forward_to_master
 
@@ -178,7 +196,7 @@ SELECT /*+ SET_VAR(query_timeout = 1) */ sleep(3);
 
 * hash_join_push_down_right_table
 
-  用于控制在Join查询中是否可以使用针对右表的过滤条件来过滤左表的数据，可以减少Join过程中需要处理的左表的数据量。取值为true时表示允许该操作，系统将根据实际情况决定是否能对左表进行过滤；取值为false表示禁用该操作。缺省值为true。
+  用于控制在 Join 查询中是否可以使用针对右表的过滤条件来过滤左表的数据，可以减少 Join 过程中需要处理的左表的数据量。取值为 true 时表示允许该操作，系统将根据实际情况决定是否能对左表进行过滤；取值为 false 表示禁用该操作。缺省值为 true。
 
 * init_connect
 
@@ -188,11 +206,23 @@ SELECT /*+ SET_VAR(query_timeout = 1) */ sleep(3);
 
   用于兼容 MySQL 客户端。无实际作用。
 
-* is_report_success
+* enable_profile
 
-  用于设置是否需要查看查询的 profile。默认为 `false`，即不需要查看 profile。
+  用于设置是否需要查看查询的 profile。默认为 `false`，即不需要查看 profile。2.5 版本之前，该变量名称为 `is_report_success`，2.5 版本之后更名为 `enable_profile`。
 
-  默认情况下，只有在查询发生错误时，BE 才会发送 profile 给 FE，用于查看错误。正常结束的查询不会发送 profile。发送 profile 会产生一定的网络开销，对高并发查询场景不利。 当用户希望对一个查询的 profile 进行分析时，可以将这个变量设为 true 后，发送查询。查询结束后，可以通过在当前连接的 FE 的 web 页面（地址：fe_host:fe_http_port/query）查看 profile。该页面会显示最近100条开启了 is_report_success 的查询的 profile。
+  默认情况下，只有在查询发生错误时，BE 才会发送 profile 给 FE，用于查看错误。正常结束的查询不会发送 profile。发送 profile 会产生一定的网络开销，对高并发查询场景不利。当用户希望对一个查询的 profile 进行分析时，可以将这个变量设为 `true` 后，发送查询。查询结束后，可以通过在当前连接的 FE 的 web 页面（地址：fe_host:fe_http_port/query）查看 profile。该页面会显示最近 100 条开启了 `enable_profile` 的查询的 profile。
+
+* enable_query_queue_load
+
+  布尔值，用于控制是否为导入任务启用查询队列。默认值：`false`。
+
+* enable_query_queue_select
+
+  布尔值，用于控制是否为 SELECT 查询启用查询队列。默认值：`false`。
+
+* enable_query_queue_statistic
+
+  布尔值，用于控制是否为统计信息查询启用查询队列。默认值：`false`。
 
 * language
 
@@ -225,6 +255,10 @@ SELECT /*+ SET_VAR(query_timeout = 1) */ sleep(3);
 * max_scan_key_num
 
   该变量的具体含义请参阅 BE 配置项中 `starrocks_max_scan_key_num` 的说明。该变量默认置为 -1，表示使用 be.conf 中的配置值。如果设置大于 0，则当前会话中的查询会使用该变量值，而忽略 be.conf 中的配置值。
+
+* nested_mv_rewrite_max_level
+
+  可用于查询改写的嵌套物化视图的最大层数。类型：INT。取值范围：[1, +∞)。默认值：`3`。取值为 `1` 表示只可使用基于基表创建的物化视图用于查询改写。
 
 * net_buffer_length
 
@@ -270,9 +304,29 @@ SELECT /*+ SET_VAR(query_timeout = 1) */ sleep(3);
 
    用于兼容 JDBC 连接池 C3P0。 无实际作用。
 
+* query_queue_concurrency_limit
+
+  单个 BE 节点中并发查询上限。仅在设置为大于 `0` 后生效。默认值：`0`。
+
+* query_queue_cpu_used_permille_limit
+
+  单个 BE 节点中内存使用千分比上限（即 CPU 使用率 * 1000）。仅在设置为大于 `0` 后生效。默认值：`0`。取值范围：[0, 1000]
+
+* query_queue_max_queued_queries
+
+  队列中查询数量的上限。当达到此阈值时，新增查询将被拒绝执行。仅在设置为大于 `0` 后生效。默认值：`0`。
+
+* query_queue_mem_used_pct_limit
+
+  单个 BE 节点中内存使用百分比上限。仅在设置为大于 `0` 后生效。默认值：`0`。取值范围：[0, 1]
+
+* query_queue_pending_timeout_second
+
+  队列中单个查询的最大超时时间。当达到此阈值时，该查询将被拒绝执行。默认值：`300`。单位：秒。
+
 * query_timeout
 
-   用于设置查询超时，单位是「秒」。该变量会作用于当前连接中所有的查询语句，以及 INSERT 语句。默认为300秒，即 5 分钟。
+   用于设置查询超时，单位是「秒」。该变量会作用于当前连接中所有的查询语句，以及 INSERT 语句。默认为 300 秒，即 5 分钟。取值范围：1 ~ 259200。
 
 * resource_group
 
@@ -296,13 +350,13 @@ SELECT /*+ SET_VAR(query_timeout = 1) */ sleep(3);
 
 * storage_engine
 
-  指定系统使用的存储引擎。StarRocks支持的引擎类型包括：
+  指定系统使用的存储引擎。StarRocks 支持的引擎类型包括：
 
-  * olap：StarRocks系统自有引擎。
-  * mysql：使用MySQL外部表。
-  * broker：通过Broker程序访问外部表。
-  * elasticsearch 或者 es：使用Elasticsearch外部表。
-  * hive：使用Hive外部表。
+  * olap：StarRocks 系统自有引擎。
+  * mysql：使用 MySQL 外部表。
+  * broker：通过 Broker 程序访问外部表。
+  * elasticsearch 或者 es：使用 Elasticsearch 外部表。
+  * hive：使用 Hive 外部表。
 
 * system_time_zone
 
@@ -323,11 +377,11 @@ SELECT /*+ SET_VAR(query_timeout = 1) */ sleep(3);
 
 * use_v2_rollup
 
-  用于控制查询使用segment v2存储格式的Rollup索引获取数据。该变量用于上线segment v2的时进行验证使用。其他情况不建议使用。
+  用于控制查询使用 segment v2 存储格式的 Rollup 索引获取数据。该变量用于上线 segment v2 的时进行验证使用。其他情况不建议使用。
 
 * vectorized_engine_enable
 
-  用于控制是否使用向量化引擎执行查询。值为true时表示使用向量化引擎，否则使用非向量化引擎。缺省值为true。
+  用于控制是否使用向量化引擎执行查询。值为 true 时表示使用向量化引擎，否则使用非向量化引擎。缺省值为 true。
 
 * version
 

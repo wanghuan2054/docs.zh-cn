@@ -6,14 +6,14 @@
 
 关键字在 SQL 语句中具有特殊的含义，比如 `CREATE` 和 `DROP`，其中：
 
-- **非保留关键字**可以直接作为标识符，如表名和列名。例如，DB 是非保留关键字，如要创建一个名为 `DB` 的数据库，语法如下。
+- **非保留关键字** (Non-reserved keywords) 可以直接作为标识符，如表名和列名。例如，DB 是非保留关键字，如要创建一个名为 `DB` 的数据库，语法如下。
 
     ```SQL
     CREATE DATABASE DB;
     Query OK, 0 rows affected (0.00 sec)
     ```
 
-- **保留关键字**不能直接作为标识符给变量或者函数等命名，需要做特殊处理。在 StarRocks 中，使用保留关键字作为标识符，需要用反引号 (\`) 将其括起。例如，LIKE 为保留关键字，如要创建一个名为 `LIKE` 的数据库，语法如下。
+- **保留关键字** (Reserved keywords) 不能直接作为标识符给变量或者函数等命名，需要做特殊处理。在 StarRocks 中，使用保留关键字作为标识符，需要用反引号 (\`) 将其括起。例如，LIKE 为保留关键字，如要创建一个名为 `LIKE` 的数据库，语法如下。
 
     ```SQL
     CREATE DATABASE `LIKE`;
@@ -57,6 +57,8 @@
 - CREATE
 - CROSS
 - CUBE
+- CURRENT_DATE
+- CURRENT_TIME
 - CURRENT_TIMESTAMP
 - CURRENT_USER
 
@@ -150,6 +152,8 @@
 - LIKE
 - LIMIT
 - LOAD
+- LOCALTIME
+- LOCALTIMESTAMP
 
 ### M
 
@@ -179,6 +183,10 @@
 - PERCENTILE
 - PRIMARY
 - PROCEDURE
+
+### Q
+
+- QUALIFY
 
 ### R
 

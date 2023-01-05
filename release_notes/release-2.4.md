@@ -1,5 +1,77 @@
 # StarRocks version 2.4
 
+## 2.4.2
+
+发布日期：2022 年 12 月 14 日
+
+### 功能优化
+
+- 优化了 Bucket Hint 在存在大量 Bucket 时候的性能。[#13142](https://github.com/StarRocks/starrocks/pull/13142)
+
+### 问题修复
+
+修复了如下 Bug：
+
+- 主键索引落盘可能导致 BE 崩溃。[#14857](https://github.com/StarRocks/starrocks/pull/14857) [#14819](https://github.com/StarRocks/starrocks/pull/14819)
+- 物化视图表类型不能被`SHOW FULL TABLES` 正确识别。[#13954](https://github.com/StarRocks/starrocks/pull/13954)
+- StarRocks 从 v2.2 升级到 v2.4 可能导致 BE 崩溃。[#13795](https://github.com/StarRocks/starrocks/pull/13795)
+- Broker Load 可能导致 BE 崩溃。[#13973](https://github.com/StarRocks/starrocks/pull/13973)
+- Session 变量 `statistic_collect_parallel` 不生效。[#14352](https://github.com/StarRocks/starrocks/pull/14352)
+- INSERT INTO 可能导致 BE 崩溃。[#14818](https://github.com/StarRocks/starrocks/pull/14818)
+- JAVA UDF 可能导致 BE 崩溃。[#13947](https://github.com/StarRocks/starrocks/pull/13947)
+- Partial Update 时副本 Clone 可能导致 BE 崩溃且无法重启。[#13683](https://github.com/StarRocks/starrocks/pull/13683)
+- Colocated Join 可能不生效。[#13561](https://github.com/StarRocks/starrocks/pull/13561)
+
+### 行为变更
+
+- Session 变量 `query_timeout` 添加最大值 `259200` 和最小值 `1` 的限制。
+
+## 2.4.1
+
+发布日期：2022 年 11 月 14 日
+
+### 新增特性
+
+- 新增非等值 LEFT SEMI/ANTI JOIN 支持，完善 JOIN 功能。[#13019](https://github.com/StarRocks/starrocks/pull/13019)
+
+### 功能优化
+
+- 在 `HeartbeatResponse` 添加 `aliveStatus` 属性，用以判断节点在线状态，优化节点在线判断逻辑。[#12713](https://github.com/StarRocks/starrocks/pull/12713)
+
+- 优化 Routine Load 的报错信息显示。[#12155](https://github.com/StarRocks/starrocks/pull/12155)
+
+### 问题修复
+
+修复了如下 Bug：
+
+- 因自 2.4.0 RC 升级至 2.4.0 导致 BE 崩溃。[#13128](https://github.com/StarRocks/starrocks/pull/13128)
+
+- 查询数据湖时，延迟物化会导致查询结果错误。[#13133](https://github.com/StarRocks/starrocks/pull/13133)
+
+- 函数 get_json_int 报错。[#12997](https://github.com/StarRocks/starrocks/pull/12997)
+
+- 索引落盘的主键表删除数据时，可能导致数据不一致。[#12719](https://github.com/StarRocks/starrocks/pull/12719)
+
+- 主键表 Compaction 可能会导致 BE 崩溃。[#12914](https://github.com/StarRocks/starrocks/pull/12914)
+
+- 函数 json_object 输入含有空字符串时，返回错误结果。[#13030](https://github.com/StarRocks/starrocks/issues/13030)
+
+- RuntimeFilter 会导致 BE 崩溃。[#12807](https://github.com/StarRocks/starrocks/pull/12807)
+
+- CBO 内过多递归计算导致 FE 挂起。[#12788](https://github.com/StarRocks/starrocks/pull/12788)
+
+- 优雅退出时 BE 可能会崩溃或报错。[#12852](https://github.com/StarRocks/starrocks/pull/12852)
+
+- 添加新列后，删除会造成 Compaction 崩溃的问题。[#12907](https://github.com/StarRocks/starrocks/pull/12907)
+
+- OLAP 外表元数据同步会导致数据不一致。[#12368](https://github.com/StarRocks/starrocks/pull/12368)
+
+- 其中一个 BE 崩溃后，相关查询小概率在其他 BE 一直运行直到超时。[#12954](https://github.com/StarRocks/starrocks/pull/12954)
+
+### 行为变更
+
+- Hive 外表解析出错时，StarRocks 会报错，不会将相关列设置为 NULL。 [#12382](https://github.com/StarRocks/starrocks/pull/12382)
+
 ## 2.4.0
 
 发布日期： 2022 年 10 月 20 日

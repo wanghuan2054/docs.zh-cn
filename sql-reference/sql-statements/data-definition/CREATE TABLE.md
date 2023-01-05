@@ -2,7 +2,7 @@
 
 ## 功能
 
-该语句用于创建 table。
+该语句用于创建表。
 
 ## 语法
 
@@ -14,13 +14,15 @@ CREATE [EXTERNAL] TABLE [IF NOT EXISTS] [database.]table_name
 [key_desc]
 [COMMENT "table comment"];
 [partition_desc]
-[distribution_desc]
+distribution_desc
 [rollup_index]
 [PROPERTIES ("key"="value", ...)]
 [BROKER PROPERTIES ("key"="value", ...)]
 ```
 
 ## 参数说明
+
+在指定数据库名、表名和列名等变量时，如果使用了保留关键字，必须使用反引号 (`) 包裹，否则可能会产生报错。有关 StarRocks 的保留关键字列表，请参见[关键字](../keywords.md#保留关键字)。
 
 ### **column_definition**
 
@@ -39,53 +41,58 @@ col_name col_type [agg_type] [NULL | NOT NULL] [DEFAULT "default_value"]
 具体的列类型以及范围等信息如下：
 
 * TINYINT（1字节）
-范围：-2^7 + 1 ~ 2^7 - 1
+  范围：-2^7 + 1 ~ 2^7 - 1
 
 * SMALLINT（2字节）
-范围：-2^15 + 1 ~ 2^15 - 1
+  范围：-2^15 + 1 ~ 2^15 - 1
 
 * INT（4字节）
-范围：-2^31 + 1 ~ 2^31 - 1
+  范围：-2^31 + 1 ~ 2^31 - 1
 
 * BIGINT（8字节）
-范围：-2^63 + 1 ~ 2^63 - 1
+  范围：-2^63 + 1 ~ 2^63 - 1
 
 * LARGEINT（16字节）
-范围：-2^127 + 1 ~ 2^127 - 1
+  范围：-2^127 + 1 ~ 2^127 - 1
 
 * FLOAT（4字节）
-支持科学计数法
+  支持科学计数法
 
 * DOUBLE（8字节）
-支持科学计数法
+  支持科学计数法
 
 * DECIMAL[(precision, scale)] (16字节)
-保证精度的小数类型。默认是 DECIMAL(10, 0)
+  保证精度的小数类型。默认是 DECIMAL(10, 0)
     precision: 1 ~ 38
     scale: 0 ~ precision
-其中整数部分为：precision - scale
-不支持科学计数法
+  其中整数部分为：precision - scale
+  不支持科学计数法
 
 * DATE（3字节）
-范围：0000-01-01 ~ 9999-12-31
+  范围：0000-01-01 ~ 9999-12-31
 
 * DATETIME（8字节）
-范围：0000-01-01 00:00:00 ~ 9999-12-31 23:59:59
+  范围：0000-01-01 00:00:00 ~ 9999-12-31 23:59:59
 
 * CHAR[(length)]
-定长字符串。长度范围：1 ~ 255。默认为1
+
+  定长字符串。长度范围：1 ~ 255。默认为 1。
 
 * VARCHAR[(length)]
-变长字符串。长度范围：1 ~ 65533
+
+  变长字符串。单位：字节，默认取值为 `1`。
+  * 对于 StarRocks 2.1 之前的版本，`length` 的取值范围为 1~65533。
+  * 【公测中】自 StarRocks 2.1 版本开始，`length` 的取值范围为 1~1048576。
 
 * HLL (1~16385个字节)
-hll列类型，不需要指定长度和默认值，长度根据数据的聚合程度系统内控制，并且HLL列只能通过配套的hll_union_agg、Hll_cardinality、hll_hash进行查询或使用
+
+  hll 列类型，不需要指定长度和默认值，长度根据数据的聚合程度系统内控制，并且 HLL 列只能通过配套的 [hll_union_agg](../../sql-functions/aggregate-functions/hll_union_agg.md)、[Hll_cardinality](../../sql-functions/scalar-functions/hll_cardinality.md)、[hll_hash](../../sql-functions/aggregate-functions/hll_hash.md)进行查询或使用。
 
 * BITMAP
-bitmap列类型，不需要指定长度和默认值。表示整型的集合，元素最大支持到2^64 - 1
+  bitmap列类型，不需要指定长度和默认值。表示整型的集合，元素最大支持到2^64 - 1。
 
 * ARRAY
-支持在一个数组中嵌套子数组，最多可嵌套 14 层。您必须使用尖括号（ < 和 > ）来声明 ARRAY 类型，如 ARRAY < INT >。目前不支持将数组中的元素声明为 [Fast Decimal](../data-types/DECIMAL.md) 类型。
+  支持在一个数组中嵌套子数组，最多可嵌套 14 层。您必须使用尖括号（ < 和 > ）来声明 ARRAY 类型，如 ARRAY < INT >。目前不支持将数组中的元素声明为 [Fast Decimal](../data-types/DECIMAL.md) 类型。
 
 **agg_type**：聚合类型，如果不指定，则该列为 key 列。否则，该列为 value 列。
 
@@ -94,11 +101,11 @@ bitmap列类型，不需要指定长度和默认值。表示整型的集合，�
 
 * SUM、MAX、MIN、REPLACE
 
-* HLL_UNION(仅用于HLL列，为HLL独有的聚合方式)。
+* HLL_UNION（仅用 HLL列，为 HLL 独有的聚合方式)。
 
-* BITMAP_UNION(仅用于 BITMAP 列，为 BITMAP 独有的聚合方式)。
+* BITMAP_UNION（仅用于 BITMAP 列，为 BITMAP 独有的聚合方式)。
 
-* REPLACE_IF_NOT_NULL：这个聚合类型的含义是当且仅当新导入数据是非NULL值时会发生替换行为，如果新导入的数据是NULL，那么StarRocks仍然会保留原值。
+* REPLACE_IF_NOT_NULL：这个聚合类型的含义是当且仅当新导入数据是非 NULL 值时会发生替换行为，如果新导入的数据是NULL，那么 StarRocks 仍然会保留原值。
 ```
 
 注意：
@@ -107,24 +114,21 @@ bitmap列类型，不需要指定长度和默认值。表示整型的集合，�
 2. 如果用在建表时 `REPLACE_IF_NOT_NULL` 列指定了 NOT NULL，那么 StarRocks 仍然会将其转化 NULL，不会向用户报错。用户可以借助这个类型完成「部分列导入」的功能。
 该类型只对聚合模型有用(`key_desc` 的 `type` 为 `AGGREGATE KEY`)。
 
-**NULL | NOT NULL**：是否允许为 NULL。默认为 NULL，PRIMARY KEY 的 key 列默认为 NOT NULL。NULL 值在导入数据中用 \N 来表示。
+**NULL | NOT NULL**：列数据是否允许为 `NULL`。其中明细模型、聚合模型和更新模型表中所有列都默认指定 `NULL`。主键模型表的指标列默认指定 `NULL`，维度列默认指定 `NOT NULL`。如源数据文件中存在 `NULL` 值，可以用 `\N` 来表示，导入时 StarRocks 会将其解析为 `NULL`。
+
+**DEFAULT "default_value"**：列数据的默认值。导入数据时，如果该列对应的源数据文件中的字段为空，则自动填充 `DEFAULT` 关键字中指定的默认值。支持以下三种指定方式：
+
+* **DEFAULT current_timestamp**：默认值为当前时间。参见 [current_timestamp()](../../sql-functions/date-time-functions/current_timestamp.md) 。
+* **DEFAULT <默认值>**：默认值为指定的列类型。例如，列类型为 VARCHAR，即可指定默认值为 `DEFAULT "beijing"`。当前不支持指定 ARRAY、BITMAP、JSON、HLL 和 BOOLEAN 类型为默认值。
+* **DEFAULT (<表达式>)**：默认值为指定函数返回的结果。目前仅支持 [uuid()](../../sql-functions/utility-functions/uuid.md) 和 [uuid_numeric()](../../sql-functions/utility-functions/uuid_numeric.md) 表达式。
 
 ### **index_definition**
 
-语法：
+建表时仅支持创建 bitmap 索引，语法如下。有关参数说明和使用限制，请参见 [Bitmap 索引](/using_starrocks/Bitmap_index.md#创建索引)。
 
 ```sql
-INDEX index_name (col_name[, col_name, ...]) [USING BITMAP] COMMENT 'xxxxxx'
+INDEX index_name (col_name[, col_name, ...]) [USING BITMAP] [COMMENT '']
 ```
-
-说明：
-
-**index_name**：索引名称
-
-**col_name**：列名
-
-注意：
-当前仅支持 BITMAP 索引， BITMAP 索引仅支持应用于单列。
 
 ### **ENGINE 类型**
 
@@ -226,11 +230,47 @@ PARTITION BY RANGE (k1, k2, ...)
 3. 分区为左闭右开区间，首个分区的左边界为最小值。
 4. NULL 值只会存放在包含 **最小值** 的分区中。当包含最小值的分区被删除后，NULL 值将无法导入。
 5. 可以指定一列或多列作为分区列。如果分区值缺省，则会默认填充最小值。
+6. 当分区列为单列时，才支持使用 MAXVALUE。
 
 注意：
 
 1. 分区一般用于时间维度的数据管理。
 2. 有数据回溯需求的，可以考虑首个分区为空分区，以便后续增加分区。
+
+示例：
+
+1. 数据类型为 DATE 的列 `pay_dt` 为分区列，并且按天分区。
+
+    ```sql
+    PARTITION BY RANGE(pay_dt)
+    (
+        PARTITION p1 VALUES LESS THAN ("2021-01-02"),
+        PARTITION p2 VALUES LESS THAN ("2021-01-03"),
+        PARTITION p3 VALUES LESS THAN ("2021-01-04")
+    )
+    ```
+
+2. 数据类型为 INT 的列 `pay_dt` 为分区列，并且按天分区。
+
+    ```sql
+    PARTITION BY RANGE(pay_dt)
+    (
+        PARTITION p1 VALUES LESS THAN ("20210102"),
+        PARTITION p2 VALUES LESS THAN ("20210103"),
+        PARTITION p3 VALUES LESS THAN ("20210104")
+    )
+    ```
+
+3. 数据类型为 INT 的列 `pay_dt` 为分区列，并且按天分区，最后一个分区没有上界。
+
+    ```sql
+    PARTITION BY RANGE(pay_dt)
+    (
+        PARTITION p1 VALUES LESS THAN ("20210102"),
+        PARTITION p2 VALUES LESS THAN ("20210103"),
+        PARTITION p3 VALUES LESS THAN MAXVALUE
+    )
+    ```
 
 **Fixed Range**
 
@@ -240,23 +280,57 @@ PARTITION BY RANGE (k1, k2, ...)
 PARTITION BY RANGE (k1, k2, k3, ...)
 (
     PARTITION partition_name1 VALUES [("k1-lower1", "k2-lower1", "k3-lower1",...), ("k1-upper1", "k2-upper1", "k3-upper1", ...)),
-    PARTITION partition_name2 VALUES [("k1-lower1-2", "k2-lower1-2", ...), ("k1-upper1-2", MAXVALUE, )),
-    "k3-upper1-2", ...
+    PARTITION partition_name2 VALUES [("k1-lower1-2", "k2-lower1-2", ...), ("k1-upper1-2", "k2-upper1-2", "k3-upper1-2", ...))
+    ...
 )
 ```
 
 说明：
 
 1. Fixed Range 比 LESS THAN 相对灵活些，左右区间完全由用户自己确定。
-
 2. 其他与 LESS THAN 保持同步。
+3. 当分区列为单列时，才支持使用 MAXVALUE。
+
+示例：
+
+1. 数据类型为 DATE 的列 `pay_dt` 为分区列，并且按月分区。
+
+    ```sql
+    PARTITION BY RANGE (pay_dt)
+    (
+        PARTITION p20210101 VALUES [("2021-01-01"), ("2021-02-01")),
+        PARTITION p20210102 VALUES [("2021-02-01"), ("2021-03-01")),
+        PARTITION p20210103 VALUES [("2021-03-01"), ("2021-04-01"))
+    )
+    ```
+
+2. 数据类型为 INT 的列 `pay_dt` 为分区列，并且按月分区。
+
+    ```sql
+    PARTITION BY RANGE (pay_dt)
+    (
+        PARTITION p20210101 VALUES [("20210101"), ("20210201")),
+        PARTITION p20210102 VALUES [("20210201"), ("20210301")),
+        PARTITION p20210103 VALUES [("20210301"), ("20210401"))
+    )
+    ```
+
+3. 数据类型为 INT 的列 `pay_dt` 为分区列，并且按月分区，最后一个分区没有上界。
+
+    ```sql
+    PARTITION BY RANGE (pay_dt)
+    (
+        PARTITION p20210101 VALUES [("20210101"), ("20210201")),
+        PARTITION p20210102 VALUES [("20210201"), ("20210301")),
+        PARTITION p20210103 VALUES [("20210301"), (MAXVALUE))
+    )
 
 **批量创建分区**
 
 语法：
 
 ```sql
-PARTITION BY RANGE (datekey) (
+PARTITION BY RANGE (pay_dt) (
     START ("2021-01-01") END ("2021-01-04") EVERY (INTERVAL 1 day)
 )
 ```
@@ -264,14 +338,31 @@ PARTITION BY RANGE (datekey) (
 说明：
 用户可以通过给出一个 START 值、一个 END 值以及一个定义分区增量值的 EVERY 子句批量产生分区。
 
-1. 当前分区键仅支持 **日期类型** 和 **整数类型**，分区类型需要与 EVERY 里的表达式匹配。
-2. 当分区键为日期类型的时候需要指定 `INTERVAL` 关键字来表示日期间隔，目前日期仅支持 `day、week、month、year`，分区的命名规则同动态分区一样。
+1. 当前分区列仅支持 **日期类型** 和 **整数类型**，分区类型需要与 EVERY 里的表达式匹配。
+2. 当分区列为日期类型的时候需要指定 `INTERVAL` 关键字来表示日期间隔，目前日期仅支持 `day、week、month、year`，分区的命名规则同动态分区一样。
+3. 当分区列的数据类型为 INT 时，START 值、END 值仍需要用双引号包裹。
+4. 仅支持指定一列作为分区列。
+5. 更详细的语法规则，请参见[批量创建分区](/table_design/Data_distribution.md#批量创建分区)。
 
-更详细的语法规则，请参见[批量创建分区](/table_design/Data_distribution.md#批量创建分区)。
+示例：
+
+1. 数据类型为 DATE 的列 `pay_dt` 为分区列，并且按年分区。
+
+    ```sql
+    PARTITION BY RANGE (pay_dt) (
+        START ("2018-01-01") END ("2023-01-01") EVERY (INTERVAL 1 YEAR)
+    )
+    ```
+
+2. 数据类型为 INT 的列 `pay_dt` 为分区列，并且按年分区。
+
+    ```sql
+    PARTITION BY RANGE (pay_dt) (
+        START ("2018") END ("2023") EVERY (1)
+    )
+    ```
 
 ### **distribution_desc**
-
-Hash 分桶
 
 语法：
 
@@ -279,8 +370,23 @@ Hash 分桶
 DISTRIBUTED BY HASH (k1[,k2 ...]) [BUCKETS num]
 ```
 
-说明：
-使用指定的 key 列进行哈希分桶。默认分桶数为 10。`DISTRIBUTED BY` 为必填字段。有关如何确定分桶数量，请参见[确定分桶数量](/table_design/Data_distribution.md#确定分桶数量)。建议使用 Hash 分桶方式。
+对每个分区的数据，StarRocks 会根据分桶键和分桶数量进行哈希分桶。
+
+对于分桶键的选择，如果存在列同时满足高基数和经常作为查询条件，则优先选择其为分桶键，进行哈希分桶。
+如果不存在这些同时满足两个条件的列，则需要根据查询进行判断。
+
+* 如果查询比较复杂，则建议选择高基数的列为分桶键，保证数据在各个分桶中尽量均衡，提高集群资源利用率。
+* 如果查询比较简单，则建议选择经常作为查询条件的列为分桶键，提高查询效率。
+并且，如果数据倾斜情况严重，您还可以使用多个列作为数据的分桶键，但是建议不超过 3 个列。
+
+更多选择分桶键的信息，请参见[选择分桶键](../../../table_design/Data_distribution.md#选择分桶键).
+
+**注意**
+
+* **建表时，必须指定分桶键**。
+* 作为分桶键的列，该列的值不支持更新。
+* 分桶键指定后不支持修改。
+* 自 2.5 版本起，建表时您**无需手动指定分桶数量**，StarRocks 自动设置分桶数量。如果您需要手动设置分桶数量，则请参见[确定分桶数量](/table_design/Data_distribution.md#确定分桶数量)。
 
 ### **PROPERTIES**
 
@@ -300,8 +406,6 @@ PROPERTIES (
 ```
 
 **storage_medium**：用于指定该分区的初始存储介质，可选择 SSD 或 HDD。
-
-* 默认初始存储介质可通过 fe 的配置文件 `fe.conf` 中指定 `default_storage_medium=xxx`，如果没有指定，则默认为 HDD。
 
 > 注意：当 FE 配置项 `enable_strict_storage_medium_check` 为 `true` 时，若集群中没有设置对应的存储介质时，建表语句会报错 `Failed to find enough hosts with storage medium [SSD|HDD] at all backends...`。设置 `enable_strict_storage_medium_check` 为 `false` 可以忽略该报错强行建表，但是后续可能会导致集群磁盘空间分布出现不均衡，所以强烈建议在建表时指定和集群存储介质相匹配的 `storage_medium` 属性。
 
@@ -363,17 +467,44 @@ PROPERTIES (
 )
 ```
 
-dynamic_partition.enable: 用于指定表级别的动态分区功能是否开启。默认为 true。
+| 参数                          | 是否必填 | 说明                                                         |
+| ----------------------------- | -------- | ------------------------------------------------------------ |
+| `dynamic_partition.enable`    | 否       | 开启动态分区特性，取值为 `TRUE`（默认）或 `FALSE`。       |
+| `dynamic_partition.time_unit` | 是       | 动态分区的时间粒度，取值为 `DAY`、`WEEK` 或 `MONTH`。时间粒度会决定动态创建的分区名后缀格式。  <br>取值为 `DAY` 时，动态创建的分区名后缀格式为 yyyyMMdd，例如 `20200321`。<br>取值为 `WEEK` 时，动态创建的分区名后缀格式为 yyyy_ww，例如 `2020_13` 代表 2020 年第 13 周。<br>取值为 `MONTH` 时，动态创建的分区名后缀格式为 yyyyMM，例如 `202003`。 |
+| `dynamic_partition.start`：   | 否       | 保留的动态分区的起始偏移，取值范围为负整数。根据 `dynamic_partition.time_unit` 属性的不同，以当天（周/月）为基准，分区范围在此偏移之前的分区将会被删除。比如设置为`-3`，并且`dynamic_partition.time_unit`为`day`，则表示 3 天前的分区会被删掉。<br>如果不填写，则默认为 `Integer.MIN_VALUE`，即 `-2147483648`，表示不删除历史分区。 |
+| `dynamic_partition.end`       | 是       | 提前创建的分区数量，取值范围为正整数。根据 `dynamic_partition.time_unit` 属性的不同，以当天（周/月）为基准，提前创建对应范围的分区。 |
+| `dynamic_partition.prefix`    | 否       | 动态分区的前缀名，默认值为 `p`。                             |
+| dynamic_partition.buckets     | 否       | 动态分区的分桶数量。默认与 BUCKETS 保留字指定的分桶数量、或者 StarRocks 自动设置的分桶数量保持一致。 |
 
-dynamic_partition.time_unit: 用于指定动态添加分区的时间单位，可选择为 DAY（天），WEEK(周)，MONTH（月）。
+#### 【公测中】设置数据压缩算法
 
-dynamic_partition.start: 用于指定向前删除多少个分区。值必须小于 0。默认为 Integer.MIN_VALUE。
+您可以在建表时通过增加属性 `compression` 为该表指定数据压缩算法。
 
-dynamic_partition.end: 用于指定提前创建的分区数量。值必须大于 0。
+`compression` 有效值包括：
 
-dynamic_partition.prefix: 用于指定创建的分区名前缀，例如分区名前缀为 p，则自动创建分区名为 p20200108。
+* `LZ4`：LZ4 算法。
+* `ZSTD`：Zstandard 算法。
+* `ZLIB`：zlib 算法。
+* `SNAPPY`：Snappy 算法。
 
-dynamic_partition.buckets: 用于指定自动创建的分区分桶数量。
+如不指定数据压缩算法，StarRocks 默认使用 LZ4。
+
+关于如何选择合适的数据压缩算法，请参阅[数据压缩](../../../table_design/data_compression.md)。
+
+#### 【公测中】设置数据导入安全等级
+
+如果您的 StarRocks 集群有多数据副本，您可以在建表时通过增加属性（PROPERTIES） `write_quorum` 指定数据导入安全等级，即设置需要多少数据副本导入成功后 StarRocks 可返回导入成功。
+
+`write_quorum` 的取值及其对应描述如下：
+
+* `MAJORITY`：默认值。当**多数**数据副本导入成功时，StarRocks 返回导入成功，否则返回失败。
+* `ONE`：当**一个**数据副本导入成功时，StarRocks 返回导入成功，否则返回失败。
+* `ALL`：当**所有**数据副本导入成功时，StarRocks 返回导入成功，否则返回失败。
+
+> **注意**
+>
+> * 设置较低的导入数据安全等级会增加数据不可访问甚至丢失的风险。例如，在 StarRocks 集群有两个数据副本的情况下设置 `write_quorum` 为 `ONE`，如果某个 Tablet 实际只成功导入了一个副本，而此副本所在机器后续下线，则会导致该 Tablet 中的数据因为没有存活副本而无法访问。如果服务器磁盘受损，则会导致该 Tablet 中的数据丢失。
+> * 仅当所有数据副本返回导入状态后，StarRocks 才会返回导入任务状态。当有副本导入状态未知时，StarRocks 不会返回导入任务状态。导入超时的副本亦会被标记为失败。
 
 #### 建表时可以批量创建多个 Rollup
 

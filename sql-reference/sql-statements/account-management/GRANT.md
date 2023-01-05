@@ -5,15 +5,15 @@
 您可以使用该语句进行如下操作：
 
 - 将指定权限授予某用户或某角色。
-- 将指定角色授予某用户。注意仅 StarRocks 2.4 及以上版本支持该功能。
-- 授予用户 `a` IMPERSONATE 用户 `b` 的权限。授予后，用户 `a` 即可执行 [EXECUTE AS](../account-management/EXECUTE%20AS.md) 语句以用户 `b` 的身份执行操作。注意仅 StarRocks 2.4 及以上版本支持该功能。
+- 将指定角色授予某用户。注意，仅 StarRocks 2.4 及以上版本支持该功能。
+- 授予用户 `a` IMPERSONATE 用户 `b` 的权限。授予后，用户 `a` 即可执行 [EXECUTE AS](../account-management/EXECUTE%20AS.md) 语句以用户 `b` 的身份执行操作。注意，仅 StarRocks 2.4 及以上版本支持该功能。
 
 ## 语法
 
 - 将数据库和表的指定权限授予某用户或某角色。如果授予的角色不存在，那么系统会自动创建该角色。
 
     ```SQL
-    GRANT privilege_list ON db_name[.tbl_name] TO {user_identity | ROLE 'role_name'}；
+    GRANT privilege_list ON db_name[.tbl_name] TO {user_identity | ROLE 'role_name'};
     ```
 
 - 将资源的指定权限授予某用户或某角色。如果授予的角色不存在，那么系统会自动创建该角色。
@@ -60,11 +60,13 @@
 
 指定的数据库和表。支持以下格式：
 
-- `*.*`：所有数据库及库中所有表。
+- `*.*`：所有数据库及库中所有表，即全局权限。
 - `db.*`：指定数据库及库中所有表。
 - `db.tbl`：指定数据库下的指定表。
 
-> 说明：当使用`db.*` 或 `db.tbl` 格式时，指定数据库和指定表可以是不存在的数据库和表。
+> **说明**
+>
+> 当使用 `db.*` 或 `db.tbl` 格式时，指定数据库和指定表可以是不存在的数据库和表。
 
 ### resource_name
 
@@ -73,7 +75,9 @@
 - `*`：所有资源。
 - `resource`：指定资源。
 
-> 说明：当使用`resource` 格式时，指定资源可以是不存在的资源。
+> **说明**
+>
+> 当使用 `resource` 格式时，指定资源可以是不存在的资源。
 
 ### user_identity
 
@@ -97,7 +101,7 @@ GRANT SELECT_PRIV ON *.* TO 'jack'@'%';
 GRANT LOAD_PRIV ON db1.* TO ROLE 'my_role';
 ```
 
-示例三：将数据库 `db1` 和表 `tbl1` 的读取、结构变更和导入权限授予用户`jack`。
+示例三：将数据库 `db1` 和表 `tbl1` 的读取、结构变更和导入权限授予用户 `jack`。
 
 ```SQL
 GRANT SELECT_PRIV,ALTER_PRIV,LOAD_PRIV ON db1.tbl1 TO 'jack'@'192.8.%';

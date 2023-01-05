@@ -148,21 +148,29 @@ FROM data_source
 
         指定导入作业所使用的时区。默认为使用 Session 的 `timezone` 参数。该参数会影响所有导入涉及的和时区有关的函数结果。
 
-    6. `format`
+    6. `merge_condition`
+
+        用于指定作为更新生效条件的列名。只有当导入的数据中该列的值大于当前值的时候，更新才会生效。参见[通过导入实现数据变更](../../../loading/PrimaryKeyLoad.md)。
+        比如一个表包含 `id`, `timestamp` 等列，如果您希望同一主键的数据行，根据 `timestamp` 字段更新，即只有最新导入数据行的时间戳（timestamp 列的值）大于 StarRocks 中当前数据行的时间戳，该数据行才能更新，则您可以设置 `"merge_condition" = "timestamp"`。
+        > **说明**
+        >
+        > 指定的列必须为非主键列，且仅主键模型表支持条件更新。
+
+    7. `format`
 
         指定导入数据的格式，默认是 CSV，支持 JSON 格式。
 
-    7. `jsonpaths`
+    8. `jsonpaths`
 
-        指定导入 JSON 数据的方式，分为简单模式和匹配模式。如果设置了 `jsonpaths`参数，则为匹配模式导入，否则为简单模式导入，具体可参考示例。
+        指定导入 JSON 数据的方式，分为简单模式和匹配模式。如果设置了 `jsonpaths` 参数，则为匹配模式导入，否则为简单模式导入，具体可参考示例。
 
-    8. `strip_outer_array`
+    9. `strip_outer_array`
 
         BOOLEAN 类型。取值为 `true` 表示 JSON 数据以数组对象开始且将数组对象进行展平，默认值为 `false`。
 
-    9. `json_root`
+    10. `json_root`
 
-        `json_root` 为合法的 `jsonpaths` 字符串，用于指定 json document 的根节点，默认值为 ""。
+        `json_root` 为合法的 `jsonpaths` 字符串，用于指定 JSON Document 的根节点，默认值为 ""。
 
 5. **data_source**
 
@@ -223,9 +231,13 @@ FROM data_source
         "property.ssl.ca.location" = "FILE:ca-cert"
         ```
 
-        1.使用 SSL 连接 Kafka 时，需要指定以下参数：
+        4.1 使用SSL连接 Kafka  
+        需要指定以下参数：  
+
+        ```plain text
         "property.security.protocol" = "ssl",
         "property.ssl.ca.location" = "FILE:ca-cert",
+        ```
 
         其中:
         "property.security.protocol" 用于指定连接方式为 SSL。
@@ -241,11 +253,15 @@ FROM data_source
         "property.ssl.key.location" 指定 client 的 private key 的位置。
         "property.ssl.key.password" 指定 client 的 private key 的密码。
 
-        2.使用 SASL 连接 Kafka 时，需要指定以下参数：
+        4.2 使用SASL连接Kafka  
+        需要指定以下参数：
+
+        ```plain text
         "property.security.protocol"="SASL_PLAINTEXT",
         "property.sasl.mechanism"="PLAIN",
         "property.sasl.username"="admin",
         "property.sasl.password"="admin"
+        ```
 
         其中：
         "property.security.protocol" 指定协议为 SASL_PLAINTEXT。
@@ -253,7 +269,7 @@ FROM data_source
         "property.sasl.username" 指定 SASL 的用户名。
         "property.sasl.password" 指定 SASL 的密码。
 
-        3.指定Kafka partition的默认起始offset
+        4.3 指定Kafka partition的默认起始offset  
         如果没有指定`kafka_partitions/kafka_offsets`，默认消费所有分区，此时可以指定`kafka_default_offsets`起始 offset。默认为 `OFFSET_END`，即从末尾开始订阅。
         值为
          1.OFFSET_BEGINNING: 从有数据的位置开始订阅。
@@ -262,6 +278,14 @@ FROM data_source
 
         ```plaintext
         "property.kafka_default_offsets" = "OFFSET_BEGINNING"
+        ```
+
+        4.4 指定Kafka consumer group的group id  
+        如果没有指定`group.id`，StarRocks会根据Routine Load的job name生成一个随机值，具体格式为`{job_name}_{random uuid}`，如`simple_job_0a64fe25-3983-44b2-a4d8-f52d3af4c3e8`。
+         示例：
+
+        ```plaintext
+        "property.group.id" = "group_id_0"
         ```
 
 导入数据格式样例
@@ -373,11 +397,13 @@ FROM KAFKA
 ```
 
 支持两种 JSON 数据格式：
-1）{"category":"a9jadhx","author":"test","price":895}
-2）[
+
+1）`{"category":"a9jadhx","author":"test","price":895}`
+
+2）`[
 {"category":"a9jadhx","author":"test","price":895},
 {"category":"axdfa1","author":"EvelynWaugh","price":1299}
-]
+]`
 
 ### 示例5：指定 `jsonpaths` 导入 JSON 格式数据
 
@@ -425,14 +451,19 @@ FROM KAFKA
 ```
 
 JSON数据格式:
+
+```plaintext
 [
 {"category":"11","title":"SayingsoftheCentury","price":895,"timestamp":1589191587},
 {"category":"22","author":"2avc","price":895,"timestamp":1589191487},
 {"category":"33","author":"3avc","title":"SayingsoftheCentury","timestamp":1589191387}
 ]
+```
 
 说明：
+
 1）如果 JSON 数据是以数组开始，并且数组中每个对象是一条记录，则需要将 `strip_outer_array` 设置成 `true`，表示展平数组。
+
 2）如果 JSON 数据是以数组开始，并且数组中每个对象是一条记录，在设置 `jsonpaths` 时，ROOT 节点实际上是数组中对象。
 
 ### 示例6：指定根节点 `json_root`
@@ -460,6 +491,8 @@ FROM KAFKA
 ```
 
 JSON 数据格式:
+
+```plaintext
 {
 "RECORDS":[
 {"category":"11","title":"SayingsoftheCentury","price":895,"timestamp":1589191587},
@@ -467,3 +500,4 @@ JSON 数据格式:
 {"category":"33","author":"3avc","title":"SayingsoftheCentury","timestamp":1589191387}
 ]
 }
+```

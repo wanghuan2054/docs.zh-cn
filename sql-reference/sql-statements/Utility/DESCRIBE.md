@@ -5,7 +5,7 @@
 您可以使用该语句进行如下操作：
 
 - 查看 StarRocks 表结构、[排序键](/table_design/Sort_key.md) (Sort Key) 类型和[物化视图](/using_starrocks/Materialized_view.md)。
-- 查看外部数据源 Apache Hive™、 Apache Iceberg 和 Apache Hudi 表结构。仅 StarRocks 2.4 及以上版本支持该操作。
+- 查看外部数据源（如 Apache Hive™）中的表结构。仅 StarRocks 2.4 及以上版本支持该操作。
 
 ## 语法
 
@@ -47,7 +47,7 @@ DESC[RIBE] [catalog_name.][db_name.]table_name [ALL];
 
 ## 示例
 
-示例一：查看 StarRocks 的`example_table`表结构信息。
+示例一：查看 StarRocks 的 `example_table` 表结构信息。
 
 ```SQL
 DESC example_table;
@@ -72,7 +72,7 @@ DESC default_catalog.example_db.example_table;
 +-------+---------------+------+-------+---------+-------+
 ```
 
-示例二：查看 StarRocks 的`sales_records`表结构、排序键类型和物化视图。如下所示，`sales_records`表只有一张物化视图`store_amt`。
+示例二：查看 StarRocks 的 `sales_records` 表结构、排序键类型和物化视图。如下所示， `sales_records` 表只有一张物化视图 `store_amt`。
 
 ```Plain
 DESC db1.sales_records ALL;
@@ -91,7 +91,7 @@ DESC db1.sales_records ALL;
 +---------------+---------------+-----------+--------+------+-------+---------+-------+
 ```
 
-示例三：查看 Hive 中`hive_table`表结构。
+示例三：查看 Hive 中 `hive_table` 表结构。
 
 ```SQL
 DESC hive_catalog.hive_db.hive_table;
