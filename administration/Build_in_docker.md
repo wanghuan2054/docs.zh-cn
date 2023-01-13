@@ -21,6 +21,8 @@ StarRocks 版本分支与开发环境镜像版本的对应关系如下所示：
 | StarRocks 版本    | 镜像 Tag                      |
 | ---------------- | ------------------------------|
 | main             | starrocks/dev-env:main        |
+| StarRocks-2.4.*  | starrocks/dev-env:branch-2.4  |
+| StarRocks-2.3.*  | starrocks/dev-env:branch-2.3  |
 | StarRocks-2.2.*  | starrocks/dev-env:branch-2.2  |
 | StarRocks-2.1.*  | starrocks/dev-env:branch-2.1  |
 | StarRocks-2.0.*  | starrocks/dev-env:branch-2.0  |
@@ -45,7 +47,7 @@ StarRocks 版本分支与开发环境镜像版本的对应关系如下所示：
   docker exec -it {container-name} /root/starrocks/build.sh
   ```
 
-  > 注意：请避免在 Docker 容器中重复下载 **.m2** 内的 Java 依赖。您无需从 Docker 容器中复制 **starrocks/output** 内已编译好的二进制包。
+  > 说明：该方式可避免在 Docker 容器中重复下载 **.m2** 内的 Java 依赖，且无需从 Docker 容器中复制 **starrocks/output** 内已编译好的二进制包。
 
 - 不使用本地存储编译 StarRocks。
 
@@ -57,5 +59,5 @@ StarRocks 版本分支与开发环境镜像版本的对应关系如下所示：
   git clone https://github.com/StarRocks/starrocks.git
   
   cd starrocks
-  sh /build.sh
+  sh build.sh
   ```

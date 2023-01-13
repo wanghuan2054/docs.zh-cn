@@ -15,13 +15,13 @@ StarRocks FE 节点分为 Follower 节点和 Observer 节点。Follower 节点�
 
 ### 扩容 FE 集群
 
-部署并启动新增 FE 节点。详细部署方式参考 [部署 StarRocks](../quick_start/Deploy.md)
+部署并启动新增 FE 节点。详细部署方式参考 [部署 StarRocks](../quick_start/Deploy.md)。
 
 ```bash
-bin/start_fe.sh --helper "fe_master_host:edit_log_port" --daemon
+bin/start_fe.sh --helper "fe_leader_host:edit_log_port" --daemon
 ```
 
-`fe_master_host`： Leader FE 节点的 IP 地址。
+`fe_leader_host`： Leader FE 节点的 IP 地址。
 
 扩容 FE 集群。您可以将新增节点设定为 Follower 或 Observer 节点。
 
@@ -71,7 +71,7 @@ BE 集群成功扩缩容后，StarRocks 会自动根据负载情况，进行数�
 
 ### 扩容 BE 集群
 
-部署并启动新增 BE 节点。详细部署方式参考 [部署 StarRocks](../quick_start/Deploy.md)
+部署并启动新增 BE 节点。详细部署方式参考 [部署 StarRocks](../quick_start/Deploy.md)。
 
 ```bash
 bin/start_be.sh --daemon

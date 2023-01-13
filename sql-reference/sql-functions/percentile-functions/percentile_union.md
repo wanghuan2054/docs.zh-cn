@@ -12,7 +12,7 @@ percentile_union(expr);
 
 ## 参数说明
 
-`epxr`: 支持的数据类型为PERCENTILE。
+`expr`: 支持的数据类型为 PERCENTILE。
 
 ## 返回值说明
 
@@ -33,14 +33,14 @@ CREATE TABLE sales_records(
 properties("replication_num" = "1");
 ```
 
-对`sale_amt`建立PERCENTILE类型物化视图表。
+对`sale_amt`建立 PERCENTILE 类型物化视图表。
 
 ```sql
 create materialized view mv as
 select store_id, percentile_union(percentile_hash(sale_amt)) from sales_records group by store_id;
 ```
 
-创建包含PERCENTILE类型的聚合表。
+创建包含 PERCENTILE 类型的聚合表。
 
 ```sql
 CREATE TABLE sales_records(
@@ -59,7 +59,7 @@ PROPERTIES (
 );
 ```
 
-查询PERCENTILE类型列。
+查询 PERCENTILE 类型列。
 
 ```sql
 select percentile_approx_raw(percentile_union(sale_amt_per), 0.99) from sales_records;

@@ -4,7 +4,9 @@
 
 Colocate Join 功能是分布式系统实现 Join 数据分布的策略之一，能够减少数据多节点分布时 Join 操作引起的数据移动和网络传输，从而提高查询性能。
 
-在 StarRocks 中使用 Colocate Join 功能，您需要在建表时为其指定一个 Colocation Group（CG），同一 CG 内的表需遵循相同的 Colocation Group Schema（CGS），即表对应的分桶副本具有一致的分桶键、副本数量和副本放置方式。如此可以保证同一 CG 内，所有表的数据分布在相同一组 BE 节点上。当 Join 列为分桶键时，计算节点只需做本地 Join，从而减少数据在节点间的传输耗时，提高查询性能。因此，Colocation Join，相对于其他 Join，例如 Shuffle Join 和 Broadcast Join，可以有效避免数据网络传输开销，提高查询性能。
+在 StarRocks 中使用 Colocate Join 功能，您需要在建表时为其指定一个 Colocation Group（CG），同一 CG 内的表需遵循相同的 Colocation Group Schema（CGS），即表对应的分桶副本具有一致的分桶键、副本数量和副本放置方式。如此可以保证同一 CG 内，所有表的数据分布在相同一组 BE 节点上。当 Join 列为分桶键时，计算节点只需做本地 Join，从而减少数据在节点间的传输耗时，提高查询性能。因此，Colocate Join，相对于其他 Join，例如 Shuffle Join 和 Broadcast Join，可以有效避免数据网络传输开销，提高查询性能。
+
+Colocate Join 支持等值 Join。
 
 ## 使用 Colocate Join 功能
 
@@ -47,7 +49,7 @@ Group 归属于一个 Database，Group 名在一个 Database 内唯一。在内�
 
 CG 内表的一致的数据分布定义和子表副本映射，能够保证分桶键取值相同的数据行一定在相同 BE 节点上，因此当分桶键做 Join 列时，只需本地 Join 即可。
 
-### 删除 Colocation 表
+### 删除 Colocation Group
 
 当 Group 中最后一张表彻底删除后（彻底删除是指从回收站中删除。通常，一张表通过 `DROP TABLE` 命令被删除后，会在回收站默认停留一天的时间后，再被彻底删除），该 Group 也会被自动删除。
 
@@ -63,11 +65,11 @@ SHOW PROC '/colocation_group';
 
 ~~~Plain Text
 mysql> SHOW PROC '/colocation_group';
-+-------------+--------------+--------------+------------+----------------+----------+----------+
-| GroupId     | GroupName    | TableIds     | BucketsNum | ReplicationNum | DistCols | IsStable |
-+-------------+--------------+--------------+------------+----------------+----------+----------+
-| 10005.10008 | 10005_group1 | 10007, 10040 | 10         | 3              | int(11)  | true     |
-+-------------+--------------+--------------+------------+----------------+----------+----------+
++-------------+--------------+----------+------------+----------------+----------+----------+
+| GroupId     | GroupName    | TableIds | BucketsNum | ReplicationNum | DistCols | IsStable |
++-------------+--------------+----------+------------+----------------+----------+----------+
+| 11912.11916 | 11912_group1 | 11914    | 8          | 3              | int(11)  | true     |
++-------------+--------------+----------+------------+----------------+----------+----------+
 ~~~
 
 |列名|描述|
@@ -91,19 +93,20 @@ SHOW PROC '/colocation_group/GroupId';
 示例：
 
 ~~~Plain Text
-mysql> SHOW PROC '/colocation_group/10005.10008';
+mysql> SHOW PROC '/colocation_group/11912.11916';
 +-------------+---------------------+
 | BucketIndex | BackendIds          |
 +-------------+---------------------+
-| 0           | 10004, 10002, 10001 |
-| 1           | 10003, 10002, 10004 |
-| 2           | 10002, 10004, 10001 |
-| 3           | 10003, 10002, 10004 |
+| 0           | 10002, 10004, 10003 |
+| 1           | 10002, 10004, 10003 |
+| 2           | 10002, 10004, 10003 |
+| 3           | 10002, 10004, 10003 |
 | 4           | 10002, 10004, 10003 |
-| 5           | 10003, 10002, 10001 |
-| 6           | 10003, 10004, 10001 |
-| 7           | 10003, 10004, 10002 |
+| 5           | 10002, 10004, 10003 |
+| 6           | 10002, 10004, 10003 |
+| 7           | 10002, 10004, 10003 |
 +-------------+---------------------+
+8 rows in set (0.00 sec)
 ~~~
 
 | 类名 | 描述 |
@@ -141,7 +144,7 @@ ALTER TABLE tbl SET ("colocate_with" = "");
 
 Colocation 表的副本分布需遵循 Group 中指定的分布，所以其副本修复和均衡相较于普通分片有所区别。
 
-Group 具有 **Stable** 属性，当 **Stable** 为 **true** 时（即 Stable 状态），表示当前 Group 内的表的所有分片没有正在进行的变动，Colocation 特性可以正常使用。当 **Stable** 为 **false** 时（即 Unstable 状态），表示当前 Group 内有部分表的分片正在做修复或迁移，此时，相关表的 Colocate Join 将退化为普通 Join。
+Group 具有 **IsStable** 属性，当 **IsStable** 为 **true** 时（即 Stable 状态），表示当前 Group 内的表的所有分片没有正在进行的变动，Colocation 特性可以正常使用。当 **IsStable** 为 **false** 时（即 Unstable 状态），表示当前 Group 内有部分表的分片正在做修复或迁移，此时，相关表的 Colocate Join 将退化为普通 Join。
 
 ### 副本修复
 
@@ -242,9 +245,9 @@ EXPLAIN SELECT * FROM tbl1 INNER JOIN tbl2 ON (tbl1.k2 = tbl2.k2);
 +----------------------------------------------------+
 ~~~
 
-以上示例中 Hash Join 节点显示 `colocate: true`，表示 Colocation Join 生效。
+以上示例中 Hash Join 节点显示 `colocate: true`，表示 Colocate Join 生效。
 
-以下示例中 Colocation Join 没有生效：
+以下示例中 Colocate Join 没有生效：
 
 ~~~Plain Text
 +----------------------------------------------------+
@@ -298,7 +301,7 @@ EXPLAIN SELECT * FROM tbl1 INNER JOIN tbl2 ON (tbl1.k2 = tbl2.k2);
 +----------------------------------------------------+
 ~~~
 
-以上示例中，HASH JOIN 节点显示了 Colocation Join 没有生效以及对应原因：`colocate: false, reason: group is not stable`。同时 StarRocks 生成一个 EXCHANGE 节点。
+以上示例中，HASH JOIN 节点显示了 Colocate Join 没有生效以及对应原因：`colocate: false, reason: group is not stable`。同时 StarRocks 生成一个 EXCHANGE 节点。
 
 ## 高级操作
 
@@ -324,7 +327,7 @@ SET disable_colocate_join = TRUE;
 
 ### HTTP Restful API
 
-StarRocks 提供了多个与 Colocation Join 有关的 HTTP Restful API，用于查看和修改 Colocation Group。
+StarRocks 提供了多个与 Colocate Join 有关的 HTTP Restful API，用于查看和修改 Colocation Group。
 
 该 API 在 FE 端实现，您可以使用 `fe_host:fe_http_port` 进行访问。访问需要 ADMIN 权限。
 
@@ -423,7 +426,3 @@ StarRocks 提供了多个与 Colocation Join 有关的 HTTP Restful API，用于
     `返回：200`
 
     其中 Body 是以嵌套数组表示的 Bucket Seq 以及每个分桶中分片所在 BE 的 ID。
-
-    > 注意
-    >
-    > 使用该命令，需要将 FE 的配置 `tablet_sched_disable_colocate_balance` 设为 `true`，即关闭系统自动 Colocation 副本修复和均衡。否则在修改数据分布设置后可能会被系统自动重置。

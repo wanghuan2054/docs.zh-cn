@@ -39,9 +39,9 @@ StarRocks 中的排序键，相对于传统的主键，具有如下特点：
 
 ## 明细模型
 
-明细模型是默认的建表模型。
+明细模型是默认的建表模型。如果在建表时未指定任何模型，默认创建的是明细类型的表。
 
-创建表时，支持定义排序键。如果查询的过滤条件包含排序键，则 StarRocks 能够快速地过滤数据，提高查询效率。明细模型适用于分析日志数据等，支持追加新数据，不支持修改历史数据。
+创建表时，支持定义排序键。如果查询的过滤条件包含排序键，则 StarRocks 能够快速地过滤数据，提高查询效率。明细模型适用于日志数据分析等场景，支持追加新数据，不支持修改历史数据。
 
 ### 适用场景
 
@@ -66,16 +66,19 @@ CREATE TABLE IF NOT EXISTS detail (
     channel INT COMMENT ""
 )
 DUPLICATE KEY(event_time, event_type)
-DISTRIBUTED BY HASH(user_id) BUCKETS 8;
+DISTRIBUTED BY HASH(user_id) BUCKETS 8
+PROPERTIES (
+"replication_num" = "1"
+);
 ```
 
-> 建表时必须使用 `DISTRIBUTED BY HASH` 子句指定分桶键。分桶键的更多说明，请参见[分桶](Data_distribution.md/#分桶)。
+> 建表时必须使用 `DISTRIBUTED BY HASH` 子句指定分桶键，否则建表失败。分桶键的更多说明，请参见[分桶](Data_distribution.md/#分桶)。
 
 ### 使用说明
 
 - 排序键的相关说明：
   - 在建表语句中，排序键必须定义在其他列之前。
-  - 排序键可以通过 `DUPLICATE KEY` 显式定义。本示例中排序键为`event_time`和`event_type`。
+  - 排序键可以通过 `DUPLICATE KEY` 显式定义。本示例中排序键为 `event_time` 和 `event_type`。
     > 如果未指定，则默认选择表的前三列作为排序键。
 
   - 明细模型中的排序键可以为部分或全部维度列。
@@ -115,15 +118,15 @@ DISTRIBUTED BY HASH(user_id) BUCKETS 8;
 
 从数据导入至数据查询阶段，聚合模型内部同一排序键的数据会多次聚合，聚合的具体时机和机制如下：
 
-1. 数据导入阶段：数据按批次导入至聚合模型时，每一个批次的数据形成一个版本，在一个版本中，同一排序键的数据会进行一次聚合。
+1. 数据导入阶段：数据按批次导入至聚合模型时，每一个批次的数据形成一个版本。在一个版本中，同一排序键的数据会进行一次聚合。
 
-1. 后台文件合并阶段 (Compaction) ：数据分批次多次导入至聚合模型中，会生成多个版本的文件，多个版本的文件定期合并成一个大版本文件时，同一排序键的数据会进行一次聚合。
+2. 后台文件合并阶段 (Compaction) ：数据分批次多次导入至聚合模型中，会生成多个版本的文件，多个版本的文件定期合并成一个大版本文件时，同一排序键的数据会进行一次聚合。
 
-1. 查询阶段：所有版本中同一排序键的数据进行聚合，然后返回查询结果。
+3. 查询阶段：所有版本中同一排序键的数据进行聚合，然后返回查询结果。
 
 因此，聚合模型中数据多次聚合，能够减少查询时所需要的处理的数据量，进而提升查询的效率。
 
-例如，导入如下数据至聚合模型中：
+例如，导入如下数据至聚合模型中，排序键为 Date、Country：
 
 | Date       | Country | PV   |
 | ---------- | ------- | ---- |
@@ -152,7 +155,10 @@ CREATE TABLE IF NOT EXISTS example_db.aggregate_tbl (
     city_code VARCHAR(20) COMMENT "city_code of user",
     pv BIGINT SUM DEFAULT "0" COMMENT "total page views"
 )
-DISTRIBUTED BY HASH(site_id) BUCKETS 8;
+DISTRIBUTED BY HASH(site_id) BUCKETS 8
+PROPERTIES (
+"replication_num" = "1"
+);
 ```
 
 > 建表时必须使用 `DISTRIBUTED BY HASH` 子句指定分桶键。分桶键的更多说明，请参见[分桶](Data_distribution.md/#分桶)。
@@ -160,7 +166,7 @@ DISTRIBUTED BY HASH(site_id) BUCKETS 8;
 ### 使用说明
 
 - 排序键的相关说明：
-  - 在建表语句中，排序键必须定义在其他列之前。
+  - 在建表语句中，**排序键必须定义在其他列之前**。
   - 排序键可以通过 `AGGREGATE KEY` 显式定义。
 
     > - 如果 `AGGREGATE KEY` 未包含全部维度列（除指标列之外的列），则建表会失败。
@@ -180,7 +186,7 @@ DISTRIBUTED BY HASH(site_id) BUCKETS 8;
 
 建表完成后，您可以创建多种导入作业，导入数据至表中。具体导入方式，请参见[导入概览](../loading/Loading_intro.md)。
 
-> 导入时，仅支持全部更新，即导入任务需要指明所有列，例如示例中的 `site_id`、`date`、`city_code` 和 `pv` 四个列。
+> 导入时，仅支持全字段导入，即导入任务需要涵盖表的所有列，例如示例中的 `site_id`、`date`、`city_code` 和 `pv` 四个列。
 
 ## 更新模型
 
@@ -227,7 +233,10 @@ CREATE TABLE IF NOT EXISTS orders (
     total_price BIGINT COMMENT "price of an order"
 )
 UNIQUE KEY(create_time, order_id)
-DISTRIBUTED BY HASH(order_id) BUCKETS 8;
+DISTRIBUTED BY HASH(order_id) BUCKETS 8
+PROPERTIES (
+"replication_num" = "1"
+); 
 ```
 
 > 建表时必须使用 `DISTRIBUTED BY HASH` 子句指定分桶键。分桶键的更多说明，请参见[分桶](Data_distribution.md/#分桶)。
@@ -250,7 +259,7 @@ DISTRIBUTED BY HASH(order_id) BUCKETS 8;
 
 > - 导入数据时，仅支持全部更新，即导入任务需要指明所有列，例如示例中的 `create_time`、`order_id`、`order_state` 和 `total_price` 四个列。
 >
-> - 在设计导入频率时，建议以满足业务对实时性的要求为准。查询更新模型的数据时，需要聚合多版本的数据，当版本过多时会导致查询性能降低。所以导入数据至更新模型时，应该适当降低导入频率，从而提升查询性能。建议在设计导入频率时以满足业务对实时性的要求为准。如果业务对实时性的要求是分钟级别，那么每分钟导入一次更新数据即可，不需要秒级导入。
+> - 在设计导入频率时，建议以满足业务对实时性的要求为准。查询更新模型的数据时，需要聚合多版本的数据，当版本过多时会导致查询性能降低。所以导入数据至更新模型时，应该适当降低导入频率，从而提升查询性能。如果业务对实时性的要求是分钟级别，那么每分钟导入一次更新数据即可，不需要秒级导入。
 
 ## 主键模型
 
@@ -307,11 +316,10 @@ create table orders (
 PARTITION BY RANGE(`dt`) (
     PARTITION p20210820 VALUES [('2021-08-20'), ('2021-08-21')),
     PARTITION p20210821 VALUES [('2021-08-21'), ('2021-08-22')),
-    ...
     PARTITION p20210929 VALUES [('2021-09-29'), ('2021-09-30')),
     PARTITION p20210930 VALUES [('2021-09-30'), ('2021-10-01'))
 ) DISTRIBUTED BY HASH(order_id) BUCKETS 4
-PROPERTIES("replication_num" = "3",
+PROPERTIES("replication_num" = "1",
 "enable_persistent_index" = "true");
 ```
 
@@ -331,11 +339,10 @@ create table users (
     property0 tinyint NOT NULL,
     property1 tinyint NOT NULL,
     property2 tinyint NOT NULL,
-    property3 tinyint NOT NULL,
-    ....
+    property3 tinyint NOT NULL
 ) PRIMARY KEY (user_id)
 DISTRIBUTED BY HASH(user_id) BUCKETS 4
-PROPERTIES("replication_num" = "3",
+PROPERTIES("replication_num" = "1",
 "enable_persistent_index" = "true");
 ```
 
@@ -366,7 +373,7 @@ PROPERTIES("replication_num" = "3",
 
 - 自 2.4.0 版本起，主键模型支持单表和多表物化视图。
 
-- 暂不支持使用 ALTER TABLE 修改列类型。 ALTER TABLE 的相关语法说明和示例，请参见 [ALTER TABLE](../sql-reference/sql-statements/data-definition/ALTER%20TABLE.md)。
+- 使用 [ALTER TABLE](../sql-reference/sql-statements/data-definition/ALTER%20TABLE.md) 时暂不支持修改主键的列类型，不支持调整指标列的顺序。
 
 ### 下一步
 

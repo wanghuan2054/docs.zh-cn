@@ -4,7 +4,7 @@
 
 Select 语句由 select，from，where，group by，having，order by，union 等部分组成。
 
-StarRocks 的查询语句基本符合 SQL92 标准，下面简要介绍支持的 select 用法。
+StarRocks 的查询语句基本符合 SQL-92 标准，下面简要介绍支持的 select 用法。
 
 ### 连接 (Join)
 
@@ -47,7 +47,7 @@ StarRocks 支持 Self Join，即自己和自己 Join。例如同一张表的不�
 
 实际上没有特殊的语法标识 Self Join。Self Join 中 Join 两边的条件都来自同一张表，
 
-我们需要给他们分配不同的别名。
+您需要给他们分配不同的别名。
 
 例如：
 
@@ -125,7 +125,7 @@ SELECT t1.c1, t1.c2, t1.c2 FROM t1 LEFT ANTI JOIN t2 ON t1.id = t2.id;
 
 | **等值 Join**   | Self Join、Cross Join、Inner Join、Outer Join、Semi Join 和 Anti Join |
 | --------------- | ------------------------------------------------------------ |
-| **非等值 Join** | Cross Join、Inner Join 和 Outer Join                         |
+| **非等值 Join** | Cross Join、Inner Join，LEFT SEMI JOIN， LEFT ANTI JOIN 和 Outer Join  |
 
 - 等值 Join
   
@@ -153,18 +153,27 @@ Order by 通过比较一列或者多列的大小来对结果集进行排序。
 
 order by 是比较耗时耗资源的操作，因为所有数据都需要发送到 1 个节点后才能排序，排序操作相比不排序操作需要更多的内存。
 
-如果需要返回前 N 个排序结果，需要使用 LIMIT 子句；为了限制内存的使用，如果用户没有指定 LIMIT 子句，则默认返回前 65535 个排序结果。
+如果需要返回前 N 个排序结果，需要使用 LIMIT 子句；为了限制内存的使用，如果您没有指定 LIMIT 子句，则默认返回前 65535 个排序结果。
 
 Order by 语法定义如下：
 
 ```sql
 ORDER BY col [ASC | DESC]
+[ NULLS FIRST | NULLS LAST ]
 ```
 
 默认排序顺序是 ASC（升序）。示例：
 
 ```sql
 select * from big_table order by tiny_column, short_column desc;
+```
+
+StarRocks 支持在 ORDER BY 后声明 null 值排在最前面还是最后面，语法为 `order by <> [ NULLS FIRST | NULLS LAST ]`。`NULLS FIRST` 表示 null 值的记录将排在最前面，`NULLS LAST` 表示 null 值的记录将排在最后面。
+
+示例：将 null 值始终排在最前面。
+
+```sql
+select  *  from  sales_record  order by  employee_id  nulls first;
 ```
 
 ### Group by
@@ -194,7 +203,7 @@ group by tiny_column;
 
 Having 子句不是过滤表中的行数据，而是过滤聚合函数产出的结果。
 
-通常来说 having 要和聚合函数（例如 COUNT(), SUM(), AVG(), MIN(), MAX()）以及 group by 子句一起使用。
+通常来说 Having 要和聚合函数（例如 COUNT(), SUM(), AVG(), MIN(), MAX()）以及 group by 子句一起使用。
 
 示例：
 
@@ -351,7 +360,7 @@ query_1 UNION [DISTINCT | ALL] query_2
 
 只使用 union 关键词和使用 union distinct 的效果是相同的。由于去重工作是比较耗费内存的，
 
-因此使用 union all 操作查询速度会快些，耗费内存会少些。如果用户想对返回结果集进行 order by 和 limit 操作，
+因此使用 union all 操作查询速度会快些，耗费内存会少些。如果您想对返回结果集进行 order by 和 limit 操作，
 
 需要将 union 操作放在子查询中，然后 select from subquery，最后把 subquery 和 order by 放在子查询外面。
 
@@ -416,7 +425,7 @@ select distinct tiny_column from big_table limit 2;
 select distinct tiny_column, int_column from big_table limit 2;
 ```
 
-distinct 可以和聚合函数(通常是 count 函数)一同使用，count(distinct)用于计算出一个列或多个列上包含多少不同的组合。
+distinct 可以和聚合函数(通常是 count 函数)一同使用，count(distinct) 用于计算出一个列或多个列上包含多少不同的组合。
 
 ```SQL
 -- Counts the unique values from one column.
@@ -519,9 +528,9 @@ SELECT name FROM table WHERE salary = abs((SELECT MAX(salary) FROM table));
 ```sql
 -- Define one subquery at the outer level, and another at the inner level as part of the
 -- initial stage of the UNION ALL query.
-with t1 as (select 1) (with t2 as (select 2)
 
-select * from t2) union all select * from t1;
+with t1 as (select 1),t2 as (select 2)
+select * from t1 union all select * from t2;
 ```
 
 ### Where 与操作符
@@ -694,7 +703,7 @@ mysql> select not true;
 
 "^" 用来匹配字符串的首部，"$" 用来匹配字符串的尾部，"." 匹配任何一个单字符，"*"匹配 0 个或多个选项，"+"匹配 1 个多个选项，"?" 表示分贪婪表示等等。正则表达式需要匹配完整的值，并不是仅仅匹配字符串的部分内容。
 
-如果想匹配中间的部分，正则表达式的前面部分可以写成 "^.*" 或者".*"。"^" 和 "$" 通常是可以省略的。RLKIE 操作符和 REGEXP 操作符是同义词。
+如果想匹配中间的部分，正则表达式的前面部分可以写成 "^.*" 或者".*"。"^" 和 "$" 通常是可以省略的。RLIKE 操作符和 REGEXP 操作符是同义词。
 
 "|" 操作符是个可选操作符，"|" 两侧的正则表达式只需满足 1 侧条件即可，"|" 操作符和两侧的正则表达式通常需要用()括起来。
 
@@ -739,5 +748,5 @@ select tiny_column as name, int_column as sex from big_table;
 
 select sum(tiny_column) as total_count from big_table;
 
-select one.tiny_column, two.int_column from small_table one, <br/> big_table two where one.tiny_column = two.tiny_column;
+select one.tiny_column, two.int_column from small_table one, big_table two where one.tiny_column = two.tiny_column;
 ```

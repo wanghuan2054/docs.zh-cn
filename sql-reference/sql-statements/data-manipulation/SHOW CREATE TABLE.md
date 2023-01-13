@@ -2,12 +2,12 @@
 
 ## 功能
 
-查看指定表的建表语句。只有拥有该表`SELECT_PRIV`权限的用户才可以查看。注意使用 external catalog 管理的表，包括 Apache Hive™ 、Apache Iceberg 和 Apache Hudi 表暂不支持使用该语句查看。
+查看指定表的建表语句。只有拥有该表 `SELECT_PRIV` 权限的用户才可以查看。注意使用 external catalog 管理的表，包括 Apache Hive™ 、Apache Iceberg 和 Apache Hudi 表暂不支持使用该语句查看。
 
 ## 语法
 
 ```SQL
-SHOW CREATE TABLE [db_name.]table_name;
+SHOW CREATE TABLE [db_name.]table_name
 ```
 
 ## 参数说明

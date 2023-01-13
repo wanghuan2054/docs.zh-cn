@@ -10,7 +10,7 @@
 
 * `MIN()`, `MAX()`, `COUNT()`, `SUM()`, `AVG()`
 * `FIRST_VALUE()`, `LAST_VALUE()`, `LEAD()`, `LAG()`
-* `ROW_NUMBER()`, `RANK()`, `DENSE_RANK()`
+* `ROW_NUMBER()`, `RANK()`, `DENSE_RANK()`, `QUALIFY()`
 * `NTILE()`
 
 ## 窗口函数语法及参数
@@ -173,7 +173,7 @@ select x, y,
         over (
             partition by x
             order by y
-        ) as rank
+        ) as `rank`
 from int_t;
 ~~~
 
@@ -258,22 +258,36 @@ from mail_merge;
 
 ## 使用 LAG() 窗口函数
 
-`LAG()` 函数用来计算当前行**向前**数若干行的值。
+用来计算当前行**之前**若干行的值。该函数可用于直接比较行间差值或进行数据过滤。
 
-语法：
+`LAG()` 函数支持查询以下数据类型：
+
+* 数值类型：TINYINT、SMALLINT、INT、BIGINT、LARGEINT、FLOAT、DOUBLE、DECIMAL
+* 字符串类型：CHAR、VARCHAR
+* 时间类型：DATE、DATETIME
+* 从 2.5 版本开始，`LAG()` 函数支持查询 BITMAP 和 HLL 类型的数据。
+
+**语法：**
 
 ~~~SQL
-LAG (expr, offset, default) OVER (partition_by_clause order_by_clause)
+LAG(expr[, offset[, default]])
+OVER([<partition_by_clause>] [<order_by_clause>])
 ~~~
 
-以下示例计算 `stock_ticker` 表中每个 `closing_date` 前一天的收盘价。
+**参数说明：**
+
+* `expr`: 需要计算的目标字段。
+* `offset`: 偏移量，表示向前查找的行数，必须为**正整数**。如果未指定，默认按照 1 处理。
+* `default`: 没有找到符合条件的行时，返回的默认值。如果未指定 `default`，默认返回 NULL。`default` 的数据类型必须和 `expr` 兼容。
+
+以下示例计算 `stock_ticker` 表中股票 JDR **前一天**的收盘价 `closing_price`。`default` 设置为 0，表示如果没有符合条件的行，则返回 0，比如下面示例中返回结果的第一行。
 
 ~~~SQL
 select stock_symbol, closing_date, closing_price,
-    lag(closing_price,1, 0) over
-    (
-        partition by stock_symbol
-        order by closing_date
+    lag(closing_price, 1, 0)
+    over(
+    partition by stock_symbol
+    order by closing_date
     ) as "yesterday closing"
 from stock_ticker
 order by closing_date;
@@ -281,7 +295,7 @@ order by closing_date;
 
 返回：
 
-~~~Plain Text
+~~~Plain
 +--------------+---------------------+---------------+-------------------+
 | stock_symbol | closing_date        | closing_price | yesterday closing |
 +--------------+---------------------+---------------+-------------------+
@@ -338,33 +352,42 @@ from mail_merge;
 
 ## 使用 LEAD() 窗口函数
 
-`LEAD()` 函数用来计算当前行**向后**数若干行的值。
+用来计算当前行**之后**若干行的值。该函数可用于直接比较行间差值或进行数据过滤。
+
+`LEAD()` 支持的数据类型与 [LAG](#使用-lag-窗口函数) 相同。
 
 语法：
 
-~~~SQL
-LEAD (expr, offset, default) OVER (partition_by_clause order_by_clause)
+~~~Haskell
+LEAD(expr[, offset[, default]])
+OVER([<partition_by_clause>] [<order_by_clause>])
 ~~~
+
+参数说明：
+
+* `expr`: 需要计算的目标字段。
+* `offset`: 偏移量，表示向后查找的行数，必须为**正整数**。如果未指定，默认按照 1 处理。
+* `default`: 没有找到符合条件的行时，返回的默认值。如果未指定 `default`，默认返回 NULL。`default` 的数据类型必须和 `expr` 兼容。
 
 以下示例计算第二天的收盘价对比当天收盘价的走势，即第二天收盘价比当天高还是低。
 
+`default` 设置为 0，表示如果没有符合条件的行，则返回 0，
+
 ~~~SQL
 select stock_symbol, closing_date, closing_price,
-    case
-        (lead(closing_price, 1, 0)
-            over (partition by stock_symbol
-                  order by closing_date)
-         - closing_price) > 0
-    when true then "higher"
-    when false then "flat or lower"
-    end as "trending"
+    case(lead(closing_price, 1, 0) 
+         over (partition by stock_symbol
+         order by closing_date) - closing_price) > 0 
+        when true then "higher"
+        when false then "flat or lower" end
+    as "trending"
 from stock_ticker
 order by closing_date;
 ~~~
 
 返回：
 
-~~~Plain Text
+~~~Plain
 +--------------+---------------------+---------------+---------------+
 | stock_symbol | closing_date        | closing_price | trending      |
 +--------------+---------------------+---------------+---------------+
@@ -419,7 +442,7 @@ where property in ('prime','square');
 +---+----------+---------------+
 ~~~
 
-从2.4版本开始，该函数支持设置`rows between n preceding and n following`，即支持计算当前行前n行及后n行中的最大值。比如要计算当前行前3行和后2行中的最大值，语句可写为：
+从 2.4 版本开始，该函数支持设置 `rows between n preceding and n following`，即支持计算当前行前n行及后 `n` 行中的最大值。比如要计算当前行前 3 行和后 2 行中的最大值，语句可写为：
 
 ~~~SQL
 select x, property,
@@ -470,7 +493,7 @@ where property in ('prime','square');
 +---+----------+---------------+
 ~~~
 
-从2.4版本开始，该函数支持设置`rows between n preceding and n following`，即支持计算当前行前n行以及后`n`行中的最小值。比如要计算当前行前3行和后2行中的最小值，语句可写为：
+从 2.4 版本开始，该函数支持设置 `rows between n preceding and n following`，即支持计算当前行前n行以及后 `n` 行中的最小值。比如要计算当前行前 3 行和后 2 行中的最小值，语句可写为：
 
 ~~~SQL
 select x, property,
@@ -558,7 +581,7 @@ select x, y,
     rank() over(
         partition by x 
         order by y
-    ) as rank
+    ) as `rank`
 from int_t;
 ~~~
 
@@ -599,7 +622,7 @@ select x, y,
     row_number() over(
         partition by x 
         order by y
-    ) as rank
+    ) as `rank`
 from int_t;
 ~~~
 
@@ -620,6 +643,137 @@ from int_t;
 | 3 | 2 | 3    |
 +---+---+------+
 ~~~
+
+## 使用 QUALIFY 窗口函数
+
+QUALIFY 子句用于过滤窗口函数的结果。在 SELECT 语句中，可以使用 QUALIFY 来设置过滤条件，从多条记录中筛选符合条件的记录。QUALIFY 与聚合函数中的 HAVING 子句功能类似。
+
+QUALIFY 提供了一种更为简洁的数据筛选方式。比如，如果不使用 QUALIFY，过滤语句比较复杂：
+
+~~~SQL
+SELECT *
+FROM (SELECT DATE,
+             PROVINCE_CODE,
+             TOTAL_SCORE,
+             ROW_NUMBER() OVER(PARTITION BY PROVINCE_CODE ORDER BY TOTAL_SCORE) AS SCORE_ROWNUMBER
+      FROM example_table) T1
+WHERE T1.SCORE_ROWNUMBER = 1;
+~~~
+
+使用 QUALIFY 之后，语句可以简化成这样：
+
+~~~SQL
+SELECT DATE, PROVINCE_CODE, TOTAL_SCORE
+FROM example_table 
+QUALIFY ROW_NUMBER() OVER(PARTITION BY PROVINCE_CODE ORDER BY TOTAL_SCORE) = 1;
+~~~
+
+**当前 QUALIFY 仅支持如下窗口函数：ROW_NUMBER()，RANK()，DENSE_RANK()。**
+
+**语法：**
+
+~~~SQL
+SELECT <column_list>
+FROM <data_source>
+[GROUP BY ...]
+[HAVING ...]
+QUALIFY <window_function>
+[ ... ]
+~~~
+
+**参数：**
+
+* `<column_list>`: 要获取数据的列，多列使用逗号隔开。
+* `<data_source>`: 数据源，一般是表。
+* `<window_function>`: 用于过滤数据的窗口函数。当前仅支持 ROW_NUMBER()，RANK()，DENSE_RANK()。
+
+**示例：**
+
+~~~SQL
+-- 创建一张表。
+CREATE TABLE sales_record (
+   city_id INT,
+   item STRING,
+   sales INT
+) DISTRIBUTED BY HASH(`city_id`) BUCKETS 1;
+
+-- 向表插入数据。
+insert into sales_record values
+(1,'fruit',95),
+(2,'drinks',70),
+(3,'fruit',87),
+(4,'drinks',98);
+
+-- 查询表中数据。
+select * from sales_record order by city_id;
++---------+--------+-------+
+| city_id | item   | sales |
++---------+--------+-------+
+|       1 | fruit  |    95 |
+|       2 | drinks |    70 |
+|       3 | fruit  |    87 |
+|       4 | drinks |    98 |
++---------+--------+-------+
+~~~
+
+示例一：获取表中行号大于 1 的记录，无分区。
+
+~~~SQL
+SELECT city_id, item, sales
+FROM sales_record
+QUALIFY row_number() OVER (ORDER BY city_id) > 1;
++---------+--------+-------+
+| city_id | item   | sales |
++---------+--------+-------+
+|       2 | drinks |    70 |
+|       3 | fruit  |    87 |
+|       4 | drinks |    98 |
++---------+--------+-------+
+~~~
+
+示例二：按照 `item` 将表分为 2 个分区，获取每个分区中 row number 为`1`的记录。
+
+~~~SQL
+SELECT city_id, item, sales
+FROM sales_record 
+QUALIFY ROW_NUMBER() OVER (PARTITION BY item ORDER BY city_id) = 1
+ORDER BY city_id;
++---------+--------+-------+
+| city_id | item   | sales |
++---------+--------+-------+
+|       1 | fruit  |    95 |
+|       2 | drinks |    70 |
++---------+--------+-------+
+~~~
+
+示例三：按照 `item` 将表分为 2 个分区，使用 rank() 获取每个分区里销量 `sales` 排名第一的记录。
+
+~~~SQL
+SELECT city_id, item, sales
+FROM sales_record
+QUALIFY RANK() OVER (PARTITION BY item ORDER BY sales DESC) = 1
+ORDER BY city_id;
++---------+--------+-------+
+| city_id | item   | sales |
++---------+--------+-------+
+|       1 | fruit  |    95 |
+|       4 | drinks |    98 |
++---------+--------+-------+
+~~~
+
+**注意事项：**
+
+带 QUALIFY  的查询语句中，子句的执行顺序如下：
+
+> 1. From
+> 2. Where
+> 3. Group by
+> 4. Having
+> 5. Window
+> 6. QUALIFY
+> 7. Distinct
+> 8. Order by
+> 9. Limit
 
 <br/>
 

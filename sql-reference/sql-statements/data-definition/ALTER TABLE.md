@@ -2,7 +2,7 @@
 
 ## 功能
 
-该语句用于对已有的 table 进行修改。
+该语句用于修改已有 table。
 
 ## 语法
 
@@ -10,16 +10,16 @@ ALTER TABLE 语法格式如下：
 
 ```SQL
 ALTER TABLE [database.]table
-alter_clause1[, alter_clause2, ...];
+alter_clause1[, alter_clause2, ...]
 ```
 
 其中 **alter_clause** 分为 partition、rollup、schema change、rename、index 和 swap 六种操作，不同操作的应用场景为：
 
 * partition: 修改分区属性，删除分区，增加分区。
-* rollup: 创建或删除 rollup index，
+* rollup: 创建或删除 rollup index。
 * schema change: 增加列，删除列，调整列顺序，修改列类型。
 * rename: 修改表名，rollup index 名称，修改 partition 名称，注意列名不支持修改。
-* index: 修改索引(目前支持 bitmap 索引)，
+* index: 修改索引(目前支持 bitmap 索引)。
 * swap: 原子替换两张表。
 
 > 说明：
@@ -48,7 +48,7 @@ partition_desc ["key"="value"]
 2. 分区为左闭右开区间，如果用户仅指定右边界，系统会自动确定左边界。
 3. 如果没有指定分桶方式，则自动使用建表使用的分桶方式。
 4. 如指定分桶方式，只能修改分桶数，不可修改分桶方式或分桶列。
-5. `["key" = "value"]` 部分可以设置分区的一些属性，具体说明见 [CREATE TABLE](../data-definition/CREATE%20TABLE.md)
+5. `["key" = "value"]` 部分可以设置分区的一些属性，具体说明见 [CREATE TABLE](../data-definition/CREATE%20TABLE.md)。
 
 #### 删除分区
 
@@ -66,8 +66,8 @@ DROP PARTITION [IF EXISTS] partition_name [FORCE];
 注意：
 
 1. 使用分区方式的表至少要保留一个分区。
-2. 执行 `DROP PARTITION` 一段时间内，可以通过 RECOVER 语句恢复被删除的分区。详见 RECOVER 语句
-3. 如果执行 `DROP PARTITION FORCE`，则系统不会检查该分区是否存在未完成的事务，分区将直接被删除并且不能被恢复，一般不建议执行此操作
+2. 执行 `DROP PARTITION` 一段时间内，可以通过 RECOVER 语句恢复被删除的分区。详见 [RECOVER](https://docs.starrocks.io/zh-cn/latest/sql-reference/sql-statements/data-definition/RECOVER) 语句。
+3. 如果执行 `DROP PARTITION FORCE`，则系统不会检查该分区是否存在未完成的事务，分区将直接被删除并且不能被恢复，一般不建议执行此操作。
 
 #### 增加临时分区
 
@@ -82,7 +82,7 @@ partition_desc ["key"="value"]
 
 注意：
 
-1. 详细使用信息请查阅[临时分区](../../../table_design/Temporary_partition.md)
+详细使用信息请查阅[临时分区](../../../table_design/Temporary_partition.md)。
 
 #### 使用临时分区替换原分区
 
@@ -99,7 +99,7 @@ partition_desc ["key"="value"]
 
 注意：
 
-1. 详细使用信息请查阅[临时分区](../../../table_design/Temporary_partition.md)
+详细使用信息请查阅[临时分区](../../../table_design/Temporary_partition.md)。
 
 #### 删除临时分区
 
@@ -112,7 +112,7 @@ DROP TEMPORARY PARTITION partition_name;
 
 注意：
 
-1. 详细使用信息请查阅[临时分区](../../../table_design/Temporary_partition.md)
+详细使用信息请查阅[临时分区](../../../table_design/Temporary_partition.md)。
 
 #### 修改分区属性
 
@@ -133,7 +133,7 @@ MODIFY PARTITION p1|(p1[, p2, ...]) SET ("key" = "value", ...);
 
 2. 对于单分区表，partition_name 同表名。
 
-### **操作 rollup 相关语法**
+### 操作 rollup 相关语法
 
 #### 创建 rollup index
 
@@ -213,9 +213,9 @@ ALTER TABLE [database.]table DROP ROLLUP r1, r2;
 
 注意：
 
-1. 不能删除 base index
+不能删除 base index。
 
-### **schema change**
+### schema change
 
 此处下文中的 index 为物化索引。建表成功后表为 base 表(base index)，基于 base 表可 [创建 rollup index](#创建-rollup-index) 。base index 和 rollup index 都是物化索引。下方语句在编写时如果没有指定 `rollup_index_name`，默认操作基表。
 
@@ -235,7 +235,7 @@ ADD COLUMN column_name column_type [KEY | agg_type] [DEFAULT "default_value"]
 
 ```plain text
 1. 聚合模型如果增加 value 列，需要指定 agg_type。
-2. 非聚合模型（如 DUPLICATE KEY）如果增加key列，需要指定KEY关键字。
+2. 非聚合模型（如 DUPLICATE KEY）如果增加 key 列，需要指定 KEY 关键字。
 3. 不能在 rollup index 中增加 base index 中已经存在的列，如有需要，可以重新创建一个 rollup index。
 ```
 
@@ -268,8 +268,8 @@ DROP COLUMN column_name
 
 注意：
 
-1. 不能删除分区列
-2. 如果是从 base index 中删除列，则如果 rollup index 中包含该列，也会被删除
+1. 不能删除分区列。
+2. 如果是从 base index 中删除列，则如果 rollup index 中包含该列，也会被删除。
 
 #### 修改指定 index 的列类型以及列位置
 
@@ -287,7 +287,7 @@ MODIFY COLUMN column_name column_type [KEY | agg_type] [NULL | NOT NULL] [DEFAUL
 
 1. 聚合模型如果修改 value 列，需要指定 agg_type。
 2. 非聚合类型如果修改 key 列，需要指定 KEY 关键字。
-3. 只能修改列的类型，列的其他属性维持原样（即其他属性需在语句中按照原属性显式的写出，参见样例中 [SchemaChange](#schemachange) 部分第 8 个例子）。
+3. 只能修改列的类型，列的其他属性维持原样（即其他属性需在语句中按照原属性显式的写出，参见样例中 [Schema Change](#schema-change-1) 部分第 8 个例子）。
 4. 分区列不能做任何修改。
 5. 目前支持以下类型的转换（精度损失由用户保证）：
 
@@ -316,8 +316,8 @@ ORDER BY (column_name1, column_name2, ...)
 
 注意：
 
-1. index 中的所有列都要写出来
-2. value 列在 key 列之后
+1. index 中的所有列都要写出来。
+2. value 列在 key 列之后。
 
 #### 修改 table 的属性
 
@@ -332,7 +332,7 @@ PROPERTIES ("key"="value")
 注意：
 也可以合并到上面的 schema change 操作中来修改，见下面例子。
 
-### **rename 对名称进行修改**
+### rename 对名称进行修改
 
 #### 修改表名
 
@@ -360,7 +360,7 @@ ALTER TABLE [database.]table
 RENAME PARTITION old_partition_name new_partition_name;
 ```
 
-### **bitmap index 修改**
+### bitmap index 修改
 
 #### 创建 bitmap 索引
 
@@ -374,8 +374,8 @@ ADD INDEX index_name (column [, ...],) [USING BITMAP] [COMMENT 'balabala'];
 注意：
 
 ```plain text
-1. 目前仅支持bitmap 索引
-2. BITMAP 索引仅在单列上创建
+1. 目前仅支持bitmap 索引。
+2. BITMAP 索引仅在单列上创建。
 ```
 
 #### 删除索引
@@ -387,7 +387,7 @@ ALTER TABLE [database.]table
 DROP INDEX index_name;
 ```
 
-### **swap 将两个表原子替换**
+### swap 将两个表原子替换
 
 语法：
 
@@ -423,7 +423,7 @@ SWAP WITH table_name;
     ADD PARTITION p1 VALUES LESS THAN ("2014-01-01");
     ```
 
-2. 增加分区，使用新的分桶数
+2. 增加分区，使用新的分桶数。
 
     ```sql
     ALTER TABLE example_db.my_table
@@ -507,7 +507,7 @@ SWAP WITH table_name;
     DROP ROLLUP example_rollup_index2;
     ```
 
-### SchemaChange
+### Schema Change
 
 1. 向 example_rollup_index 的 col1 后添加一个 key 列 new_col(非聚合模型)。
 

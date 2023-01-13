@@ -57,7 +57,7 @@ ALTER DATABASE example_db SET DATA QUOTA 10T;
 
 ## StarRocks 支持通过 UPSERT 语法实现部分字段更新吗？
 
-StarRocks 2.2 及以上版本可以通过主键 (Primary Key) 模型实现部分字段更新。StarRocks 1.9 及以上版本可以通过主键 (Primary Key) 模型实现全部字段更新。更多信息，参见 StarRocks 2.2 版本的[主键模型](https://docs.starrocks.com/zh-cn/2.2/table_design/Data_model#%E4%B8%BB%E9%94%AE%E6%A8%A1%E5%9E%8B)。
+StarRocks 2.2 及以上版本可以通过主键 (Primary Key) 模型实现部分字段更新。StarRocks 1.9 及以上版本可以通过主键 (Primary Key) 模型实现全部字段更新。更多信息，参见 StarRocks 2.2 版本的[主键模型](../table_design/Data_model.md#主键模型)。
 
 ## 如何使用原子替换表和原子替换分区功能？
 
@@ -148,7 +148,7 @@ ERROR 1064 (HY000): HdfsOrcScanner::do_open failed. reason = Invalid ORC postscr
 解决方案有以下两种：
 
 - 将 StarRocks 升级到 2.2 或更高版本。
-- 手动刷新 Apache Hive™ 表。更多信息，参见[更新缓存](../using_starrocks/External_table#%E7%BC%93%E5%AD%98%E6%9B%B4%E6%96%B0)。
+- 手动刷新 Apache Hive™ 表。更多信息，参见[缓存更新](../data_source/External_table.md#手动更新元数据缓存)。
 
 ## 连接 MySQL 外表报错 "caching_sha2_password cannot be loaded"
 
@@ -212,7 +212,7 @@ StarRocks 支持单节点部署，所以 BE 最小配置个数是 1 个。BE 需
 
 创建一个新用户，然后通过给该用户授予表查询权限进行数据权限控制。
 
-## 为什么将 `is_report_success` 指定为 `true` 后 profile 无法显示？
+## 为什么将 `enable_profile` 指定为 `true` 后 profile 无法显示？
 
 因为报告信息只汇报给主 FE，只有主 FE 可以查看报告信息。同时，如果通过 StarRocks Manager 查看 profile， 必须确保 FE 配置项 `enable_collect_query_detail_info` 为 `true`。
 
@@ -236,3 +236,11 @@ SQL 错误 [1064] [42000]: Table[external_t] is not a OLAP/ELASTICSEARCH/HIVE ta
 **解决方法**：
 
 原来是建外部表时端口不对，正确的端口是"port"="9020"，不是9931.
+
+## 磁盘存储空间不足时，如何释放可用空间？
+
+您可以通过 `rm -rf` 命令直接删除 `trash` 目录下的内容。在完成恢复数据备份后，您也可以通过删除 `snapshot` 目录下的内容释放存储空间。
+
+## 磁盘存储空间不足，如何扩展磁盘空间？
+
+如果 BE 节点存储空间不足，您可以在 BE 配置项 `storage_root_path` 所对应目录下直接添加磁盘。

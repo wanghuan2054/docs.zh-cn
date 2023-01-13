@@ -7,22 +7,22 @@ DROP FILE 语句用于删除保存在数据库中的文件。使用该语句删�
 ```SQL
 DROP FILE "file_name" [FROM database]
 
-[properties];
+[properties]
 ```
 
 ## 参数说明
 
 | **参数**   | **必填** | **描述**                                         |
 | ---------- | -------- | ------------------------------------------------ |
-| file_name  | 是       | 文件名                                           |
-| database   | 否       | 文件所属的数据库                                 |
-| properties | 是       | 文件属性，具体配置项见下表：`properties`配置项。 |
+| file_name  | 是       | 文件名。                                           |
+| database   | 否       | 文件所属的数据库。                                 |
+| properties | 是       | 文件属性，具体配置项见下表：`properties`配置项。     |
 
 `properties` 配置项
 
 | **配置项** | **必填** | **描述**     |
 | ---------- | -------- | ------------ |
-| catalog    | 是       | 文件所属类别 |
+| catalog    | 是       | 文件所属类别。 |
 
 ## 示例
 

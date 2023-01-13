@@ -6,13 +6,13 @@
 
 > 说明：
 >
-> - 只有拥有`GRANT_PRIV` 或 `ADMIN_PRIV`权限的用户才可以创建角色。
-> - StarRocks 的两个系统角色 admin 和 operator 均拥有`ADMIN_PRIV`权限，所以拥有这两个系统角色的用户可以创建角色。
+> - 只有拥有 `GRANT_PRIV` 或 `ADMIN_PRIV` 权限的用户才可以创建角色。
+> - StarRocks 的两个系统角色 admin 和 operator 均拥有 `ADMIN_PRIV` 权限，所以拥有这两个系统角色的用户可以创建角色。
 
 ## 语法
 
 ```SQL
-CREATE ROLE role_name;
+CREATE ROLE <role_name>
 ```
 
 ## 参数说明

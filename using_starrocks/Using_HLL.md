@@ -1,8 +1,8 @@
 # 使用 HyperLogLog 实现近似去重
 
-本文介绍如何通过 HyperLogLog（HLL）在 StarRocks 中实现近似去重。
+本文介绍如何通过 HLL（HyperLogLog）在 StarRocks 中实现近似去重。
 
-HyperLogLog 是一种近似去重算法，在部分对去重精度要求不高的场景下，您可以选择使用 HyperLogLog 算法减轻数据去重分析的计算压力。根据数据集大小以及所采用的哈希函数的类型，HyperLogLog 算法的误差可控制在 1% 至 10% 左右。
+HLL 是一种近似去重算法，在部分对去重精度要求不高的场景下，您可以选择使用 HLL 算法减轻数据去重分析的计算压力。根据数据集大小以及所采用的哈希函数的类型，HLL 算法的误差可控制在 1% 至 10% 左右。
 
 ## 创建包含 HLL 列的表
 
@@ -142,14 +142,14 @@ SELECT COUNT(DISTINCT uv) FROM test;
 
 Bitmap 类型仅支持 TINYINT，SMALLINT，INT，BIGINT（注意不支持 LARGEINT）去重。对于其他类型数据集去重，您需要[构建词典](/using_starrocks/Bitmap_index.md#基于-trie-树构建全局字典)，将原类型映射到整数类型。HLL 去重方式则无需构建词典，仅要求对应的数据类型支持哈希函数。
 
-对于普通列，您还可以使用 `NDV` 函数进行近似去重计算。`NDV` 函数返回值是 `COUNT(DISTINCT col)` 结果的近似值聚合函数，底层实现将数据存储类型转为 HyperLogLog 类型进行计算。但 `NDV` 函数在计算的时候消耗资源较大，不适合于并发高的场景。
+对于普通列，您还可以使用 `NDV` 函数进行近似去重计算。`NDV` 函数返回值是 `COUNT(DISTINCT col)` 结果的近似值聚合函数，底层实现将数据存储类型转为 HLL 类型进行计算。但 `NDV` 函数在计算的时候消耗资源较大，不适合于并发高的场景。
 
 如果您的应用场景为用户行为分析，建议使用 `INTERSECT_COUNT` 或者自定义 UDAF 去重。
 
 ## 相关函数
 
 * **[HLL_UNION_AGG(hll)](../sql-reference/sql-functions/aggregate-functions/hll_union_agg.md)**：此函数为聚合函数，用于计算满足条件的所有数据的基数估算。此函数还可用于分析函数，只支持默认窗口，不支持窗口子句。
-* **HLL_RAW_AGG(hll)**：此函数为聚合函数，用于聚合 HLL 类型字段，返回 HLL 类型。
-* **HLL_CARDINALITY(hll)**：此函数用于估算单条 HLL 列的基数。
-* **HLL_HASH(column_name)**：生成 HLL 列类型，用于 `insert` 或导入 HLL 类型。
-* **HLL_EMPTY()**：生成空 HLL 列，用于 `insert` 或导入数据时补充默认值。
+* **[HLL_RAW_AGG(hll)](../sql-reference/sql-functions/aggregate-functions/hll_raw_agg.md)**：此函数为聚合函数，用于聚合 HLL 类型字段，返回 HLL 类型。
+* **[HLL_CARDINALITY(hll)](../sql-reference/sql-functions/scalar-functions/hll_cardinality.md)**：此函数用于估算单条 HLL 列的基数。
+* **[HLL_HASH(column_name](../sql-reference/sql-functions/aggregate-functions/hll_hash.md)**：生成 HLL 列类型，用于 `insert` 或导入 HLL 类型。
+* **[HLL_EMPTY()](../sql-reference/sql-functions/aggregate-functions/hll_empty.md)**：生成空 HLL 列，用于 `insert` 或导入数据时补充默认值。

@@ -3,7 +3,7 @@
 ## 功能简介
 
 StarRocks 提供 flink-connector-starrocks，导入数据至 StarRocks，相比于 Flink 官方提供的 flink-connector-jdbc，导入性能更佳。
-flink-connector-starrocks 的内部实现是通过缓存并批量由 stream load 导入。
+flink-connector-starrocks 的内部实现是通过缓存并批量由 Stream Load 导入。
 
 ## 支持的数据源
 
@@ -20,10 +20,12 @@ flink-connector-starrocks 的内部实现是通过缓存并批量由 stream load
 
 点击 [版本信息](https://search.maven.org/search?q=g:com.starrocks) 查看页面Latest Version信息，替换下面x.x.x内容
 
-```xml
+```Plain text
 <dependency>
     <groupId>com.starrocks</groupId>
     <artifactId>flink-connector-starrocks</artifactId>
+    <!-- for flink-1.15, connector 1.2.3+ -->
+    <version>x.x.x_flink-1.15</version>
     <!-- for flink-1.14 -->
     <version>x.x.x_flink-1.14_2.11</version>
     <version>x.x.x_flink-1.14_2.12</version>
@@ -68,7 +70,6 @@ flink-connector-starrocks 的内部实现是通过缓存并批量由 stream load
         )
     );
 
-
     // -------- 原始数据为 CSV 格式 --------
     class RowData {
         public int score;
@@ -109,8 +110,7 @@ flink-connector-starrocks 的内部实现是通过缓存并批量由 stream load
                 slots[1] = streamRowData.name;
             }
         )
-    )
-    ;
+    );
     ```
 
 * 如您使用 Flink Table API，则需要参考如下命令。
@@ -118,7 +118,8 @@ flink-connector-starrocks 的内部实现是通过缓存并批量由 stream load
     ```scala
     // -------- 原始数据为 CSV 格式 --------
     // create a table with `structure` and `properties`
-    // Needed: Add `com.starrocks.connector.flink.table.StarRocksDynamicTableSinkFactory` to: `src/main/resources/META-INF/services/org.apache.flink.table.factories.Factory`
+    // Needed: Add `com.starrocks.connector.flink.table.StarRocksDynamicTableSinkFactory`
+    //         to: `src/main/resources/META-INF/services/org.apache.flink.table.factories.Factory`
     tEnv.executeSql(
         "CREATE TABLE USER_RESULT(" +
             "name VARCHAR," +
@@ -159,6 +160,7 @@ flink-connector-starrocks 的内部实现是通过缓存并批量由 stream load
 | username | YES | NONE | String | starrocks connecting username |
 | password | YES | NONE | String | starrocks connecting password |
 | sink.semantic | NO | **at-least-once** | String | **at-least-once** or **exactly-once**(**flush at checkpoint only** and options like **sink.buffer-flush.*** won't work either). |
+| sink.version | NO | AUTO | String | The version of implementaion for sink exactly-once. Only availible for connector 1.2.4+. If `V2`, use StarRocks' stream load transaction interface which requires StarRocks 2.4+. If `V1`, use stream load non-transaction interface. If `AUTO`, connector will choose the stream load transaction interface automatically if the StarRocks supports the feature, otherwise choose non-transaction interface. |
 | sink.buffer-flush.max-bytes | NO | 94371840(90M) | String | the max batching size of the serialized data, range: **[64MB, 10GB]**. |
 | sink.buffer-flush.max-rows | NO | 500000 | String | the max batching rows, range: **[64,000, 5000,000]**. |
 | sink.buffer-flush.interval-ms | NO | 300000 | String | the flushing time interval, range: **[1000ms, 3600000ms]**. |
@@ -167,6 +169,7 @@ flink-connector-starrocks 的内部实现是通过缓存并批量由 stream load
 | sink.properties.format|  NO | CSV | String | The file format of data loaded into starrocks. Valid values: **CSV** and **JSON**. Default value: **CSV**. |
 | sink.properties.* | NO | NONE | String | the stream load properties like **'sink.properties.columns' = 'k1, k2, k3'**,details in [STREAM LOAD](../sql-reference/sql-statements/data-manipulation/STREAM%20LOAD.md). Since 2.4, the flink-connector-starrocks supports partial updates for Primary Key model. |
 | sink.properties.ignore_json_size | NO |false| String | ignore the batching size (100MB) of json data |
+| sink.properties.timeout | NO |600| String | Timeout for transaction stream load when you use exactly-once sink. A new transaction will begin after a Flink checkpoint is triggered, and be committed when the next checkpoint is triggered, so you should set the value larger than the Flink checkpoint interval, otherwise the Flink job will fail because of transaction timeout .   |
 
 ## Flink 与 StarRocks 的数据类型映射关系
 
@@ -195,7 +198,13 @@ flink-connector-starrocks 的内部实现是通过缓存并批量由 stream load
 
 ## 注意事项
 
-* 支持exactly-once的数据sink保证，需要外部系统的 two phase commit 机制。由于 StarRocks 无此机制，我们需要依赖flink的checkpoint-interval在每次checkpoint时保存批数据以及其label，在checkpoint完成后的第一次invoke中阻塞flush所有缓存在state当中的数据，以此达到精准一次。但如果StarRocks挂掉了，会导致用户的flink sink stream 算子长时间阻塞，并引起flink的监控报警或强制kill。
+* 自 2.4 版本 StarRocks 开始支持[Stream Load 事务接口](./stream_load_transaction_interface.md)。自 Flink connector 1.2.4 版本起， Sink 基于事务接口重新设计实现了 exactly-once，相较于原来基于非事务接口的实现，降低了内存使用和 checkpoint 耗时，提高了作业的实时性和稳定性。
+  自 Flink connector 1.2.4 版本起，sink 默认使用事务接口实现。如果需要使用非事务接口实现，则需要配置 `sink.version` 为`V1`。
+   > **注意**
+   >
+   > 如果只升级 StarRocks 或 Flink connector，sink 会自动选择非事务接口实现。
+
+* 基于Stream Load非事务接口实现的exactly-once，依赖flink的checkpoint-interval在每次checkpoint时保存批数据以及其label，在checkpoint完成后的第一次invoke中阻塞flush所有缓存在state当中的数据，以此达到精准一次。但如果StarRocks挂掉了，会导致用户的flink sink stream 算子长时间阻塞，并引起flink的监控报警或强制kill。
 
 * 默认使用csv格式进行导入，用户可以通过指定`'sink.properties.row_delimiter' = '\\x02'`（此参数自 StarRocks-1.15.0 开始支持）与`'sink.properties.column_separator' = '\\x01'`来自定义行分隔符与列分隔符。
 
@@ -214,6 +223,10 @@ flink-connector-starrocks 的内部实现是通过缓存并批量由 stream load
 
 flink-connector-starrocks 导入底层调用的 Stream Load实现，可以在 flink 日志中查看导入状态
 
-* 日志中如果有 `http://$fe:${http_port}/api/$db/$tbl/_stream_load` 生成，表示成功触发了 Stream Load 任务，任务结果也会打印在 flink 日志中，返回值可参考 [Stream Load 任务状态](../loading/StreamLoad#创建导入任务)。
+* 日志中如果有 `http://$fe:${http_port}/api/$db/$tbl/_stream_load` 生成，表示成功触发了 Stream Load 任务，任务结果也会打印在 flink 日志中，返回值可参考 [Stream Load 返回值](../sql-reference/sql-statements/data-manipulation/STREAM%20LOAD#返回值)。
 
-* 日志中如果没有上述信息，请在论坛提问 [StarRocks 论坛](https://forum.starrocks.com/)，我们会及时跟进。
+* 日志中如果没有上述信息，请在 [StarRocks 论坛](https://forum.starrocks.com/) 提问，我们会及时跟进。
+
+## 常见问题
+
+请参见 [FLink Connector 常见问题](../faq/loading/Flink_connector_faq)。

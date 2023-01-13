@@ -3,12 +3,12 @@
 
 ## 功能
 
-查看单个用户的最大连接数。只有拥有`grant_priv`权限的用户才能查看。
+查看单个用户的最大连接数。只有拥有 `grant_priv` 权限的用户才能查看。
 
 ## 语法
 
 ```SQL
-SHOW PROPERTY [FOR 'user_name'] [LIKE 'max_user_connections'];
+SHOW PROPERTY [FOR 'user_name'] [LIKE 'max_user_connections']
 ```
 
 ## 参数说明

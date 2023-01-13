@@ -175,12 +175,12 @@ python datax/bin/datax.py --jvm="-Xms6G -Xmx6G" --loglevel=debug datax/job/job.j
 
 由于 DataX 导入是基于封装的 Stream Load 实现，您可以在 `datax/log/$date/` 目录下搜索对应的导入作业日志，日志文件名字中包含导入使用的 JSON 文件名和任务启动时间（小时、分钟、秒），例如：**t_datax_job_job_json-20_52_19.196.log**。
 
-- 如果日志中有 "http://fe_ip:fe_http_port/api/db_name/tbl_name/_stream_load" 记录生成，则表示 Stream Load 作业已成功触发。作业成功触发后，您可以通过 [SHOW LOAD](../sql-reference/sql-statements/data-manipulation/SHOW%20LOAD.md) 命令查看导入结果。
+- 如果日志中有 "http://fe_ip:fe_http_port/api/db_name/tbl_name/_stream_load" 记录生成，则表示 Stream Load 作业已成功触发。作业成功触发后，您可参考 [Stream Load 返回值](../sql-reference/sql-statements/data-manipulation/STREAM%20LOAD#返回值) 查看任务情况。
 - 日志中如果没有上述信息，请根据报错信息排查问题，或者在 [DataX 社区问题](https://github.com/alibaba/DataX/issues)中寻找解决方案。
 
 > 注意
 >
-> 使用 DataX 导入时，如果有数据不符合目标表格式的数据，系统将过滤不符合目标表格式的数据，并继续导入正确的数据。
+> 使用 DataX 导入时，当存在不符合目标表格式的数据，若 StarRocks 中该字段允许 NULL 值，不合法的数据将转为 NULL 后正常导入。若字段不允许 NULL 值，且任务中未配置容错率（max_filter_ratio），则任务报错，导入作业中断。
 
 ## 取消或停止导入任务
 

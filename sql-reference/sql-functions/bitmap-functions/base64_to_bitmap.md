@@ -8,13 +8,13 @@
 
 ## 语法
 
-```Plain Text
-BITMAP base64_to_bitmap(STRING bitmap)
+```Haskell
+BITMAP base64_to_bitmap(VARCHAR bitmap)
 ```
 
 ## 参数说明
 
-`bitmap`：支持的数据类型为 STRING。导入外部 bitmap 数据时，可使用 Java 或者 C++ 接口先创建 BitmapValue 对象，然后添加元素、序列化、Base64 编码，将得到的 Base64 字符串作为该函数的入参。
+`bitmap`：支持的数据类型为 VARCHAR。导入外部 bitmap 数据时，可使用 Java 或者 C++ 接口先创建 BitmapValue 对象，然后添加元素、序列化、Base64 编码，将得到的 Base64 字符串作为该函数的入参。
 
 ## 返回值说明
 
@@ -50,14 +50,20 @@ BITMAP base64_to_bitmap(STRING bitmap)
 
     ```JSON
     {
-        "tagname": "持有产品", "tagvalue": "保险", "userid":"AjowAAABAAAAAAACABAAAAABAAIAAwA="
+        "tagname": "持有产品",
+        "tagvalue": "保险",
+        "userid":"AjowAAABAAAAAAACABAAAAABAAIAAwA="
     }
     ```
 
-    - 导入JSON文件中的数据到`bitmap_table`，使用 base64_to_bitmap 函数将`userid`转化为bitmap。
+    - 导入 JSON 文件中的数据到 `bitmap_table`，使用 base64_to_bitmap 函数将 `userid` 转化为bitmap。
 
     ```Plain Text
-    curl --location-trusted -u root: -H "columns: c1,c2,c3,tagname=c1,tagvalue=c2,userid=base64_to_bitmap(c3)" -H "label:bitmap123" -H "format: json" -H "jsonpaths: [\"$.tagname\",\"$.tagvalue\",\"$.userid\"]" -T simpleData http://host:port/api/bitmapdb/bitmap_table/_stream_load
+    curl --location-trusted -u root:\
+        -H "columns: c1,c2,c3,tagname=c1,tagvalue=c2,userid=base64_to_bitmap(c3)"\
+        -H "label:bitmap123"\
+        -H "format: json" -H "jsonpaths: [\"$.tagname\",\"$.tagvalue\",\"$.userid\"]"\
+        -T simpleData http://<host:port>/api/bitmapdb/bitmap_table/_stream_load
     ```
 
 3. 查询`bitmap_table`表中数据。

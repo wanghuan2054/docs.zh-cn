@@ -2,10 +2,10 @@
 
 ## 功能
 
-该语句用于展示当前 db 下所有的 table。
+该语句用于展示当前数据库下所有的 table。
 
 ## 语法
 
 ```sql
-SHOW TABLES;
+SHOW TABLES
 ```
