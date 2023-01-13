@@ -374,7 +374,6 @@ DISTRIBUTED BY HASH(site_id,city_code); --无需手动设置分桶数量
 > - 您需要确保系统变量 `GLOBAL enable_tablet_internal_parallel`为 `true`，已经开启并行扫描 Tablet。
 > - 不支持修改已创建分区的分桶数量，支持在增加分区时为新增分区设置新的分桶数量。
 
-
 ## 最佳实践
 
 对于 StarRocks 而言，分区和分桶的选择是非常关键的。在建表时选择合理的分区键和分桶键，可以有效提高集群整体性能。因此建议在选择分区键和分桶键时，根据业务情况进行调整。
